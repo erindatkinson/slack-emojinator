@@ -1,6 +1,13 @@
 """Module to handle sessions"""
 import os
+
 import requests
+import aiohttp
+
+
+BASE_URL = 'https://{team_name}.slack.com'
+EMOJI_ENDPOINT = '/customize/emoji'
+EMOJI_API = '/api/emoji.adminList'
 
 URL_CUSTOMIZE = "https://{team_name}.slack.com/customize/emoji"
 URL_ADD = "https://{team_name}.slack.com/api/emoji.add"
@@ -18,6 +25,42 @@ def new_session(cookie:str, team_name:str, token:str)-> requests.Session:
     session.api_token = token
     return session
 
+
+def async_session(auth_cookie) -> aiohttp.ClientSession:
+    """create a session object for the async runs"""
+    return aiohttp.ClientSession(headers={"Cookie": auth_cookie})
+
+
+# For export
+# def _argparse():
+#     parser = argparse.ArgumentParser(
+#         description='Bulk import of emoji from a slack team'
+#     )
+#     parser.add_argument(
+#         'directory',
+#         help='Where do we store downloaded emoji?'
+#     )
+#     parser.add_argument(
+#         '--team-name', '-t',
+#         default=os.getenv('SLACK_TEAM'),
+#         help='Defaults to the $SLACK_TEAM environment variable.'
+#     )
+#     parser.add_argument(
+#         '--cookie', '-c',
+#         default=os.getenv('SLACK_COOKIE'),
+#         help='Defaults to the $SLACK_COOKIE environment variable.'
+#     )
+#     parser.add_argument(
+#         '--concurrent-requests', '-r',
+#         default=int(os.getenv('CONCURRENT_REQUESTS', '200')),
+#         type=int,
+#         help='Maximum concurrent requests. Defaults to the $CONCURRENT_REQUESTS environment variable or 200.'
+#     )
+#     args = parser.parse_args()
+#     return args
+
+
+
 def arg_envs(cookie:str, team_name:str, token:str)-> tuple:
     """Pull args from env if needed, and assert requirements"""
     _cookie = os.getenv("SLACK_COOKIE", cookie)
@@ -29,3 +72,4 @@ def arg_envs(cookie:str, team_name:str, token:str)-> tuple:
     assert _token, "Either SLACK_TOKEN env var, or --token param must be set"
 
     return (_cookie, _team_name, _token)
+

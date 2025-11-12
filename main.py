@@ -3,12 +3,11 @@
 
 # https://github.com/smashwilson/slack-emojinator
 
-from __future__ import print_function
-
+import asyncio
 import os
 import os.path
-from tabulate import tabulate
 import urllib3
+from tabulate import tabulate
 
 from fire import Fire
 import numpy as np
@@ -53,7 +52,7 @@ def stats(cookie:str='', team:str='', token:str=''):
     cookie, team_name, token = utils.arg_envs(cookie, team, token)
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     session = utils.new_session(cookie, team_name, token)
-    existing_emojis = slack.get_current_emoji_list(session, all=True)
+    existing_emojis = slack.get_current_emoji_list(session, all_data=True)
     userstats = {}
     for emoji in existing_emojis:
         try:
@@ -75,9 +74,14 @@ def stats(cookie:str='', team:str='', token:str=''):
     q3 = np.percentile(df, 25)
     print(f"Bottom Quartile: {q3}")
 
+def export():
+    """handle the exporrting of all emoji from a slack instance"""
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(slack.export_loop())
 
 if __name__=="__main__":
     Fire({
+        "export": export,
         "upload": upload,
         "stats": stats
     })
