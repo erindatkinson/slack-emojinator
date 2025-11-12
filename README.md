@@ -27,8 +27,9 @@ To grab your Slack session cookie:
 * [Open your browser's dev tools](http://webmasters.stackexchange.com/a/77337) and copy the value of `document.cookie`.
 * Go to the Network tab.
 * Re-load your workspace's `https://{teamname}.slack.com/customize/emoji` page.
-* Find the call to `emoji` (it is most likely the very top request).
-* Scroll to `Request-Headers`, copy the value of "Cookie," and add to your `.env` file.
+* Find the call to `info`.
+  * Scroll to `Request-Headers`, copy the value of "Cookie,"and add to your `.env` file.
+  * In the payload, copy the value of the token and add to your `.env` file.
 
 ```bash
 cp .env.example .env
