@@ -5,7 +5,7 @@ Image by [David Bawm](https://pixabay.com/users/david_miram-11502595)
 
 Bulk import and export emoji into Slack
 
-## Importing Emoji
+## Setup and Prerequisites
 
 You'll need Python and `pip` to get started. I recommend using [pipenv](https://docs.pipenv.org/).
 
@@ -21,15 +21,9 @@ pipenv install
 
 You'll need to provide your team name (the bit before ".slack.com" in your admin URL) api token and your session cookie (grab them from your browser). Copy `.env.example`, fill them in, and source it.
 
-To grab your Slack session cookie and api token:
+### To grab your Slack session cookie and api token:
 
-* [Open your browser's dev tools](http://webmasters.stackexchange.com/a/77337) and copy the value of `document.cookie`.
-* Go to the Network tab.
-* Re-load your workspace's `https://{teamname}.slack.com/customize/emoji` page.
-* Find the various calls to `info`.
-  * In the payload of one of them will be the token, copy the value of the token and add to your `.env` file.
-  * Scroll to `Request-Headers`, copy the value of "Cookie,"and add to your `.env` file.
-    * You can also "copy request as curl and copy the string after `-b`
+* [Open your browser's dev tools](http://webmasters.stackexchange.com/a/77337) and copy the value of `document.cookie` and `boot_data.api_token`
 
 ```bash
 cp .env.example .env
@@ -39,15 +33,13 @@ source .env
 
 Now you're ready to go!
 
+## Importing Emoji
+
 ```bash
 make upload
 ```
 
-:sparkles:
-
 ## Exporting Emoji
-
-To export emoji
 
 ```bash
 source .env
