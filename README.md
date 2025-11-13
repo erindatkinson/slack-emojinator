@@ -1,6 +1,7 @@
 # Slack Emojinator
 
 ![image of heart eyes smiley emoji as a pillow in a field of grass](.github/assets/emoji-4869395_1280.jpg)
+Image by [David Bawm](https://pixabay.com/users/david_miram-11502595)
 
 Bulk import and export emoji into Slack
 
