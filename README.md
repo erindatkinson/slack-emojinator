@@ -12,8 +12,6 @@ Prepare a directory that contains an image for each emoji you want to create. Re
 
 Clone the project and install its prereqs:
 
-`libxml` is required on your system, if you'd like to use the bulk export script.
-
 ```bash
 git clone https://github.com/smashwilson/slack-emojinator.git
 cd slack-emojinator
@@ -27,9 +25,9 @@ To grab your Slack session cookie:
 * [Open your browser's dev tools](http://webmasters.stackexchange.com/a/77337) and copy the value of `document.cookie`.
 * Go to the Network tab.
 * Re-load your workspace's `https://{teamname}.slack.com/customize/emoji` page.
-* Find the call to `info`.
+* Find the various calls to `info`.
+  * In the payload of one of them will be the token, copy the value of the token and add to your `.env` file.
   * Scroll to `Request-Headers`, copy the value of "Cookie,"and add to your `.env` file.
-  * In the payload, copy the value of the token and add to your `.env` file.
 
 ```bash
 cp .env.example .env

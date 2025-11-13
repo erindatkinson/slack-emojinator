@@ -1,43 +1,44 @@
 """Module to handle slack calling functions"""
+
 import asyncio
 import collections
 import os
 import time
-
 import aiohttp
-import requests
 
 from . import utils, log
+
 
 class SlackExportException(Exception):
     """Class for slack export errors"""
 
+
 class NoEmojiException(Exception):
     """Class for empty response errors"""
 
-Emoji = collections.namedtuple('Emoji', 'url name extension')
 
-def upload_emoji(session:requests.Session, emoji_name:str, filename:str):
+Emoji = collections.namedtuple("Emoji", ["url", "name", "extension"])
+
+
+def upload_emoji(session: utils.Session, emoji_name: str, filename: str):
     """uploads the emoji data to slack"""
-    data = {
-        'mode': 'data',
-        'name': emoji_name,
-        'token': session.api_token
-    }
+    logger = log.get_logger()
+    data = {"mode": "data", "name": emoji_name, "token": session.api_token}
 
     while True:
-        with open(filename, 'rb') as f:
-            files = {'image': f}
+        with open(filename, "rb") as f:
+            files = {"image": f}
             resp = session.post(
                 session.url_add,
                 data=data,
                 files=files,
                 allow_redirects=False,
-                verify=False)
+                verify=False,
+            )
 
             if resp.status_code == 429:
-                wait = int(resp.headers.get('retry-after', 1))
-                print(f"429 Too Many Requests!, sleeping for {wait} seconds")
+                wait = int(resp.headers.get("retry-after", 1))
+                logger.info(f"429 Too Many Requests!, sleeping for {wait} seconds")
                 time.sleep(wait)
                 continue
 
@@ -45,22 +46,18 @@ def upload_emoji(session:requests.Session, emoji_name:str, filename:str):
 
         # Slack returns 200 OK even if upload fails, so check for status.
         response_json = resp.json()
-        if not response_json['ok']:
-            print(f"Error with uploading {emoji_name}: {response_json}")
+        if not response_json["ok"]:
+            logger.error(f"Error with uploading {emoji_name}: {response_json}")
 
         break
 
-def get_current_emoji_list(session:requests.Session, all_data=False):
+
+def get_current_emoji_list(session: utils.Session, all_data=False):
     """List currently uploaded emoji to filter on"""
     page = 1
     result = []
     while True:
-        data = {
-            'query': '',
-            'page': page,
-            'count': 1000,
-            'token': session.api_token
-        }
+        data = {"query": "", "page": page, "count": 1000, "token": session.api_token}
         resp = session.post(session.url_list, data=data, verify=False)
         resp.raise_for_status()
         response_json = resp.json()
@@ -78,7 +75,9 @@ def get_current_emoji_list(session:requests.Session, all_data=False):
     return result
 
 
-async def _determine_all_emoji_urls(session: aiohttp.ClientSession, base_url: str, token: str):
+async def _determine_all_emoji_urls(
+    session: aiohttp.ClientSession, base_url: str, token: str
+):
     """pull all urls to download all emoji"""
     logger = log.get_logger()
     page = 1
@@ -88,11 +87,7 @@ async def _determine_all_emoji_urls(session: aiohttp.ClientSession, base_url: st
 
     while total_pages is None or page <= total_pages:
 
-        data = {
-            'token': token,
-            'page': page,
-            'count': 100
-        }
+        data = {"token": token, "page": page, "count": 100}
 
         response = await session.post(base_url + utils.EMOJI_API, data=data)
 
@@ -101,30 +96,23 @@ async def _determine_all_emoji_urls(session: aiohttp.ClientSession, base_url: st
         if response.status != 200:
             real_url = response.request_info.real_url
             raise SlackExportException(
-                f"Failed to load emoji from {real_url} (status {response.status})")
+                f"Failed to load emoji from {real_url} (status {response.status})"
+            )
 
         json = await response.json()
 
-        for entry in json['emoji']:
-            url = str(entry['url'])
-            name = str(entry['name'])
-            extension = str(url.rsplit('.', maxsplit=1)[-1])
-
-            # slack uses 0/1 to represent false/true in the API
-            if entry['is_alias'] != 0:
-                logger.info(
-                    "Skipping emoji \"%s\", is alias of \"%s\"", name, entry['alias_for'])
-                continue
-
+        for entry in json["emoji"]:
+            url = str(entry["url"])
+            name = str(entry["name"])
+            extension = str(url.rsplit(".", maxsplit=1)[-1])
             entries.append(Emoji(url, name, extension))
 
         if total_pages is None:
-            total_pages = int(json['paging']['pages'])
+            total_pages = int(json["paging"]["pages"])
 
         page += 1
 
     return entries
-
 
 
 def concurrent_http_get(max_concurrent: int, session: aiohttp.ClientSession):
@@ -133,7 +121,7 @@ def concurrent_http_get(max_concurrent: int, session: aiohttp.ClientSession):
 
     async def http_get(emoji: Emoji):
         nonlocal semaphore
-        with await semaphore:
+        async with semaphore:
             response = await session.get(emoji.url)
             body = await response.content.read()
             await response.wait_for_close()
@@ -146,34 +134,35 @@ def save_to_file(response: bytes, emoji: Emoji, directory: str):
     """save raw data to file"""
     logger = log.get_logger()
     logger.info("Downloaded %s from %s", emoji.name.ljust(20), emoji.url)
-    with open(os.path.join(directory, f"{emoji.name}.{emoji.extension}"), 'wb') as out:
+    with open(os.path.join(directory, f"{emoji.name}.{emoji.extension}"), "wb") as out:
         out.write(response)
 
 
-async def export_loop():
+async def export_loop(
+    team_name: str, cookie: str, token: str, directory: str, concurrency: int = 1
+):
     """the async loop for exporting"""
     logger = log.get_logger()
-    #TODO: update for args
-    args = None #args = _argparse()
 
-    if not os.path.exists(args.directory):
-        os.makedirs(args.directory)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
-    base_url = utils.BASE_URL.format(team_name=args.team_name)
+    base_url = utils.BASE_URL.format(team_name=team_name)
 
-    async with utils.async_session(args.cookie) as session:
-        #TODO: update for args
-        token = '' #await _fetch_api_token(session, base_url)
-
+    async with utils.async_session(cookie) as session:
         emojis = await _determine_all_emoji_urls(session, base_url, token)
 
         if len(emojis) == 0:
-            raise NoEmojiException('Failed to find any custom emoji')
+            raise NoEmojiException("Failed to find any custom emoji")
 
-        function_http_get = concurrent_http_get(args.concurrent_requests, session)
+        function_http_get = concurrent_http_get(concurrency, session)
 
-        for future in asyncio.as_completed([function_http_get(emoji) for emoji in emojis]):
+        for future in asyncio.as_completed(
+            [function_http_get(emoji) for emoji in emojis]
+        ):
             emoji, data = await future
-            save_to_file(data, emoji, args.directory)
+            save_to_file(data, emoji, directory)
 
-        logger.info("Exported %s custom emoji to directory '%s'", len(emojis), {args.directory})
+        logger.info(
+            "Exported %s custom emoji to directory '%s'", len(emojis), {directory}
+        )
