@@ -59,6 +59,11 @@ target/
 # Ignore environment variable file
 .env
 
-# Ignore default export directory
+# Ignore OS specific cruft
+.DS_Store
+
+# Ignore default export/import directories
 
 export/
+import/
+

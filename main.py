@@ -88,8 +88,7 @@ def export(
         cookie, team, token, concurrency=concurrency
     )
     os.makedirs(export_dir, exist_ok=True)
-
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
     loop.run_until_complete(
         slack.export_loop(
             team_name=team_name, cookie=cookie, token=token, directory=export_dir
@@ -98,4 +97,4 @@ def export(
 
 
 if __name__ == "__main__":
-    Fire({"export": export, "upload": upload, "stats": stats})
+    Fire({"export": export, "import": upload, "stats": stats})

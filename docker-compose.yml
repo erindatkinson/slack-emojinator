@@ -1,0 +1,22 @@
+services:
+  emoji:
+    build:
+      context: .
+    image: slack-emojinator:latest
+  emoji-import:
+    image: slack-emojinator:latest
+    volumes: &volumes
+      - ./export:/emojinator/export:rw
+      - ./import:/emojinator/import:rw
+    environment: &environments
+      SLACK_TEAM: ${SLACK_TEAM}
+      SLACK_COOKIE: ${SLACK_COOKIE}
+      SLACK_TOKEN: ${SLACK_TOKEN}
+      SLACK_CONCURRENCY: ${SLACK_CONCURRENCY:-2}
+    command: ["main.py", "import", "./import/"]
+
+  emoji-export:
+    image: slack-emojinator:latest
+    volumes: *volumes
+    environment: *environments
+    command: ["main.py", "export", "./export/"]
