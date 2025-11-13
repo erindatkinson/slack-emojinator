@@ -1,10 +1,10 @@
 # Slack Emojinator
 
-*Bulk upload emoji into Slack*
+![image of heart eyes smiley emoji as a pillow in a field of grass](.github/assets/emoji-4869395_1280.jpg)
 
-Want to create a custom Slack emoji for every pokemon? Slack doesn't currently expose an API endpoint for creating emoji, probably to prevent users from doing exactly what I'm doing, but here's a way to do it anyway.
+Bulk import and export emoji into Slack
 
-## Creating Emoji
+## Importing Emoji
 
 You'll need Python and `pip` to get started. I recommend using [pipenv](https://docs.pipenv.org/).
 
@@ -13,14 +13,14 @@ Prepare a directory that contains an image for each emoji you want to create. Re
 Clone the project and install its prereqs:
 
 ```bash
-git clone https://github.com/smashwilson/slack-emojinator.git
+git clone https://github.com/erindatkinson/slack-emojinator.git
 cd slack-emojinator
 pipenv install
 ```
 
-You'll need to provide your team name (the bit before ".slack.com" in your admin URL) and your session cookie (grab it from your browser). Copy `.env.example`, fill them in, and source it.
+You'll need to provide your team name (the bit before ".slack.com" in your admin URL) api token and your session cookie (grab them from your browser). Copy `.env.example`, fill them in, and source it.
 
-To grab your Slack session cookie:
+To grab your Slack session cookie and api token:
 
 * [Open your browser's dev tools](http://webmasters.stackexchange.com/a/77337) and copy the value of `document.cookie`.
 * Go to the Network tab.
@@ -28,6 +28,7 @@ To grab your Slack session cookie:
 * Find the various calls to `info`.
   * In the payload of one of them will be the token, copy the value of the token and add to your `.env` file.
   * Scroll to `Request-Headers`, copy the value of "Cookie,"and add to your `.env` file.
+    * You can also "copy request as curl and copy the string after `-b`
 
 ```bash
 cp .env.example .env
@@ -35,19 +36,51 @@ ${EDITOR} .env
 source .env
 ```
 
-Now you're ready to go. Use a shell glob to invoke `upload.py` with the emoji files as ARGV:
+Now you're ready to go!
 
 ```bash
-pipenv run python upload.py ${EMOJI_DIR}/*.png
+make upload
 ```
 
 :sparkles:
 
 ## Exporting Emoji
 
-To export emoji, use `export.py` and specify an emoji directory:
+To export emoji
 
 ```bash
 source .env
-pipenv run python export.py path-to-destination/
+make download
 ```
+
+## Docker
+
+If you'd rather run this through docker, you can run everything the same as before, ensuring you sourced a filled .env file:
+
+### Docker: Import
+
+Put emoji in `./import`
+
+```bash
+source .env
+make docker-import
+```
+
+### Docker: Export
+
+Put emoji in `./export`
+
+```bash
+source .env
+make docker-export
+```
+
+## Available commands
+
+If you want to know all the commands you can run, just run
+
+```bash
+make help
+```
+
+💜

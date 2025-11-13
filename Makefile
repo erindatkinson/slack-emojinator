@@ -25,6 +25,9 @@ download: needs-envs
 upload: needs-envs
 	pipenv run python main.py import ./import/
 
+stats: needs-envs
+	pipenv run python main.py stats
+
 ## help:			Prints make target help information from comments in makefile.
 help: Makefile
 	@sed -n 's/^##//p' $< | sort
