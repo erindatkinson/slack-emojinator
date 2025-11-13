@@ -6,13 +6,19 @@
 import asyncio
 import os
 import os.path
+import sys
 import urllib3
 from tabulate import tabulate
+from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
 
 from fire import Fire
 import numpy as np
 
+# pylint: disable=import-error
 from packages import slack, utils, log
+
+# pylint: enable=import-error
 
 
 def upload(filepath, cookie: str = "", team: str = "", token: str = ""):
@@ -96,5 +102,48 @@ def export(
     )
 
 
+def testing(browser: str = "firefox"):
+    """Testing selenium option"""
+    logger = log.get_logger()
+    driver_opts = {
+        "firefox": webdriver.Firefox,
+        "chrome": webdriver.Chrome,
+        "safari": webdriver.Safari,
+    }
+
+    try:
+        driver = driver_opts[browser]()
+        team_name = os.getenv("SLACK_TEAM")
+        cookie_string = os.getenv("SLACK_COOKIE")
+        assert cookie_string, "SLACK_COOKIE must be set"
+        assert team_name, "SLACK_TEAM must be set"
+
+        # have to call it first to load the context before adding a cookie
+        driver.get(utils.URL_CUSTOMIZE.format(team_name=team_name))
+        cookies = utils.cookie_split(cookie_string)
+
+        for cookie in cookies:
+            driver.add_cookie({"name": cookie[0].strip(), "value": cookie[1].strip()})
+
+        # actually get the thing
+        driver.get(utils.URL_CUSTOMIZE.format(team_name=team_name))
+        driver.implicitly_wait(2)
+
+        wait = WebDriverWait(driver, timeout=5)
+        api_token = wait.until(
+            lambda driver: driver.execute_script("return boot_data.api_token;")
+        )
+
+        print(api_token)
+    except KeyError:
+        logger.error(
+            f"{browser} is unsupported, please use one of [{', '.join(driver_opts.keys())}]"
+        )
+        sys.exit(1)
+    finally:
+        if driver:  # type: ignore
+            driver.close()
+
+
 if __name__ == "__main__":
-    Fire({"export": export, "import": upload, "stats": stats})
+    Fire({"export": export, "import": upload, "stats": stats, "test": testing})

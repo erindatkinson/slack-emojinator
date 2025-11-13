@@ -57,3 +57,10 @@ def arg_envs(cookie: str, team_name: str, token: str, concurrency: int = 1) -> t
     ), "Either SLACK_CONCURRENCY env var, or --concurrency param must be set"
 
     return (_cookie, _team_name, _token, _concurrency)
+
+
+def cookie_split(cookie: str = os.getenv("SLACK_COOKIE", "")):
+    """method to split a cookie string int a list of kv pairs"""
+    if cookie == "":
+        return []
+    return list(list(map(lambda x: x.split("="), cookie.split(";"))))

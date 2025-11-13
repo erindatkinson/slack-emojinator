@@ -83,7 +83,7 @@ async def _determine_all_emoji_urls(
     page = 1
     total_pages = None
 
-    entries = list()
+    entries = []
 
     while total_pages is None or page <= total_pages:
 

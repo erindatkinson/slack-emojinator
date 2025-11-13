@@ -1,6 +1,10 @@
 ## all:			Sets up pipenv requirements both locally and for docker
 all: setup build-docker
 
+## lint:			Runs pylint on the directory
+lint:
+	pipenv run pylint ./
+
 ## build-docker:		Builds docker image with Pipenv requirements
 build-docker:
 	docker-compose build
