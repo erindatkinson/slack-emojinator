@@ -87,13 +87,19 @@ async def _determine_all_emoji_urls(
 
     while total_pages is None or page <= total_pages:
 
-        data = {"token": token, "page": page, "count": 100}
+        data = {"token": token, "page": page, "count": 1000}
 
-        response = await session.post(base_url + utils.EMOJI_API, data=data)
+        response = await session.post(base_url + utils.EMOJI_API, data=data, ssl=False)
 
         logger.info("loaded %s (page %d)", response.real_url, page)
 
-        if response.status != 200:
+        if response.status == 429:
+            retry = int(response.headers.get("RETRY-AFTER", 60))
+            time.sleep(retry)
+            response = await session.post(base_url + utils.EMOJI_API, data=data, ssl=False)
+
+            logger.info("Rate-Limited: loaded %s (page %d)", response.real_url, page)
+        elif response.status != 200:
             real_url = response.request_info.real_url
             raise SlackExportException(
                 f"Failed to load emoji from {real_url} (status {response.status})"
@@ -122,7 +128,7 @@ def concurrent_http_get(max_concurrent: int, session: aiohttp.ClientSession):
     async def http_get(emoji: Emoji):
         nonlocal semaphore
         async with semaphore:
-            response = await session.get(emoji.url)
+            response = await session.get(emoji.url, ssl=False)
             body = await response.content.read()
             await response.wait_for_close()
         return emoji, body

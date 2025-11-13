@@ -39,7 +39,7 @@ def new_session(cookie: str, team_name: str, token: str) -> Session:
 
 def async_session(auth_cookie) -> aiohttp.ClientSession:
     """create a session object for the async runs"""
-    return aiohttp.ClientSession(headers={"Cookie": auth_cookie})
+    return aiohttp.ClientSession(headers={"Cookie": auth_cookie}, trust_env=True )
 
 
 def arg_envs(cookie: str, team_name: str, token: str, concurrency: int = 1) -> tuple:
