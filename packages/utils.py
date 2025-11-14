@@ -19,8 +19,9 @@ class Session(requests.Session):
     """wrapper class around requests.Session for additional
     attributes"""
 
-    def __init__(self, team_name, token):
+    def __init__(self, team_name, token, cookie):
         super().__init__()
+        self.headers = {"Cookie": cookie}
         self.url_customize = URL_CUSTOMIZE.format(team_name=team_name)
         self.url_add = URL_ADD.format(team_name=team_name)
         self.url_list = URL_LIST.format(team_name=team_name)
@@ -31,8 +32,7 @@ def new_session(cookie: str, team_name: str, token: str) -> Session:
     """Set up session object for making requests with slack cookie/token"""
     assert cookie, "Cookie required"
     assert team_name, "Team name required"
-    session = Session(team_name, token)
-    session.headers = {"Cookie": cookie}
+    session = Session(team_name, token, cookie)
 
     return session
 

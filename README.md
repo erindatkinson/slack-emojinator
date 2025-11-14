@@ -21,9 +21,12 @@ pipenv install
 
 You'll need to provide your team name (the bit before ".slack.com" in your admin URL) api token and your session cookie (grab them from your browser). Copy `.env.example`, fill them in, and source it.
 
-### To grab your Slack session cookie and api token:
+### To grab your Slack session cookie and api token
 
-* [Open your browser's dev tools](http://webmasters.stackexchange.com/a/77337) and copy the value of `document.cookie` and `boot_data.api_token`
+* Open the dev console of your browser and go to the Network tab
+* There will be at least 3 calls to /info?, in one of them there will be a payload with a token with custom emoji permissions
+* copy that token, and copy the request "as curl" into a text editor
+* pull the cookie string from the `-b` flag.
 
 ```bash
 cp .env.example .env

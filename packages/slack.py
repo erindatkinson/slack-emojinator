@@ -12,6 +12,8 @@ from . import utils, log
 class SlackExportException(Exception):
     """Class for slack export errors"""
 
+class SlackImportException(Exception):
+    """Class for slack import errors"""
 
 class NoEmojiException(Exception):
     """Class for empty response errors"""
@@ -61,15 +63,13 @@ def get_current_emoji_list(session: utils.Session, all_data=False):
         resp = session.post(session.url_list, data=data, verify=False)
         resp.raise_for_status()
         response_json = resp.json()
+        if response_json.get("ok") is False:
+            raise SlackImportException(response_json["error"])
 
-        if not all_data:
-            result.extend(map(lambda e: e["name"], response_json["emoji"]))
-            if page >= response_json["paging"]["pages"]:
-                break
-        else:
-            result.extend(response_json["emoji"])
-            if page >= response_json["paging"]["pages"]:
-                break
+
+        result.extend(map(lambda e: e["name"], response_json["emoji"]))
+        if page >= response_json["paging"]["pages"]:
+            break
 
         page = page + 1
     return result
