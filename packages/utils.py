@@ -4,6 +4,7 @@ import os
 
 import requests
 import aiohttp
+from jinja2 import FileSystemLoader, Environment
 
 
 BASE_URL = "https://{team_name}.slack.com"
@@ -64,3 +65,7 @@ def cookie_split(cookie: str = os.getenv("SLACK_COOKIE", "")):
     if cookie == "":
         return []
     return list(list(map(lambda x: x.split("="), cookie.split(";"))))
+
+def load_templates(tpl_dir:str)->Environment:
+    """Load templates from directory"""
+    return Environment(loader=FileSystemLoader([tpl_dir, './templates']))

@@ -117,8 +117,7 @@ def release_notes(
         _end = dtparse.parse(end)
     else:
         _end = dt.now()
-
-    print(f"Retrieving emoji between {_start} and {_end}")
+        
     existing_emojis = slack.get_current_emoji_list(session, all_data=True)
 
     span = list(
@@ -137,18 +136,19 @@ def release_notes(
             ranks[item['user_display_name']] += 1
         except KeyError:
             ranks[item['user_display_name']] = 1
-    print(tabulate(sorted(ranks.items(), key=lambda x: x[1], reverse=True)))
+    sorted_ranks = sorted(ranks.items(), key=lambda x: x[1], reverse=True)
 
-    batch_count = 0
-    limit = 12_000
-    for item in list_items:
-        if batch_count + len(item) + 1 <= limit:
-            batch_count += len(item) + 1
-            print(item)
-        else:
-            print("===============================Limit Break===================================")
-            batch_count = len(item) + 1
-            print(item)
+
+    tpls = utils.load_templates(".")
+    rn_tpl = tpls.get_template("release_notes.md.jinja2")
+    print(rn_tpl.render(
+        start=_start.strftime("%Y-%m-%d"),
+        end=_end.strftime("%Y-%m-%d"),
+        ranks=tabulate(sorted_ranks),
+        emojis=list_items
+        )
+    )
+
 
 
 if __name__ == "__main__":
