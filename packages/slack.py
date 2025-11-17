@@ -66,10 +66,14 @@ def get_current_emoji_list(session: utils.Session, all_data=False):
         if response_json.get("ok") is False:
             raise SlackImportException(response_json["error"])
 
-
-        result.extend(map(lambda e: e["name"], response_json["emoji"]))
-        if page >= response_json["paging"]["pages"]:
-            break
+        if all_data:
+            result.extend(map(lambda e: e, response_json["emoji"]))
+            if page >= response_json["paging"]["pages"]:
+                break
+        else:
+            result.extend(map(lambda e: e["name"], response_json["emoji"]))
+            if page >= response_json["paging"]["pages"]:
+                break
 
         page = page + 1
     return result

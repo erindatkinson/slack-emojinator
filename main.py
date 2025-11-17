@@ -6,18 +6,17 @@
 import asyncio
 import os
 import os.path
-import sys
+from datetime import datetime as dt
+import dateutil.relativedelta as rdt
+import dateutil.parser as dtparse
+
 import urllib3
 from tabulate import tabulate
-from selenium import webdriver
-from selenium.webdriver.support.wait import WebDriverWait
-
 from fire import Fire
 import numpy as np
 
 # pylint: disable=import-error
 from packages import slack, utils, log
-
 # pylint: enable=import-error
 
 
@@ -101,49 +100,56 @@ def export(
         )
     )
 
+def release_notes(
+        cookie:str='',
+        token:str='',
+        team:str='',
+        end:str='',
+        start:str=str(dt.now() - rdt.relativedelta(days=14))):
+    """print the release notes"""
 
-def testing(browser: str = "firefox"):
-    """Testing selenium option"""
-    logger = log.get_logger()
-    driver_opts = {
-        "firefox": webdriver.Firefox,
-        "chrome": webdriver.Chrome,
-        "safari": webdriver.Safari,
-    }
+    cookie, team_name, token, _ = utils.arg_envs(cookie, team, token)
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    session = utils.new_session(cookie, team_name, token)
 
-    try:
-        driver = driver_opts[browser]()
-        team_name = os.getenv("SLACK_TEAM")
-        cookie_string = os.getenv("SLACK_COOKIE")
-        assert cookie_string, "SLACK_COOKIE must be set"
-        assert team_name, "SLACK_TEAM must be set"
+    _start = dtparse.parse(start)
+    if end != '':
+        _end = dtparse.parse(end)
+    else:
+        _end = dt.now()
 
-        # have to call it first to load the context before adding a cookie
-        driver.get(utils.URL_CUSTOMIZE.format(team_name=team_name))
-        cookies = utils.cookie_split(cookie_string)
+    print(f"Retrieving emoji between {_start} and {_end}")
+    existing_emojis = slack.get_current_emoji_list(session, all_data=True)
 
-        for cookie in cookies:
-            driver.add_cookie({"name": cookie[0].strip(), "value": cookie[1].strip()})
+    span = list(
+                filter(
+                    lambda x:
+                        x['created'] <= _end.timestamp() and x['created'] > _start.timestamp(),
+                    sorted(
+                        existing_emojis,
+                        key=lambda x: x['name'])))
 
-        # actually get the thing
-        driver.get(utils.URL_CUSTOMIZE.format(team_name=team_name))
-        driver.implicitly_wait(2)
+    list_items = list(map(lambda x: f"* :{x['name']}: | `{x['name']}`", span))
 
-        wait = WebDriverWait(driver, timeout=5)
-        api_token = wait.until(
-            lambda driver: driver.execute_script("return boot_data.api_token;")
-        )
+    ranks = {}
+    for item in span:
+        try:
+            ranks[item['user_display_name']] += 1
+        except KeyError:
+            ranks[item['user_display_name']] = 1
+    print(tabulate(sorted(ranks.items(), key=lambda x: x[1], reverse=True)))
 
-        print(api_token)
-    except KeyError:
-        logger.error(
-            f"{browser} is unsupported, please use one of [{', '.join(driver_opts.keys())}]"
-        )
-        sys.exit(1)
-    finally:
-        if driver:  # type: ignore
-            driver.close()
+    batch_count = 0
+    limit = 12_000
+    for item in list_items:
+        if batch_count + len(item) + 1 <= limit:
+            batch_count += len(item) + 1
+            print(item)
+        else:
+            print("===============================Limit Break===================================")
+            batch_count = len(item) + 1
+            print(item)
 
 
 if __name__ == "__main__":
-    Fire({"export": export, "import": upload, "stats": stats, "test": testing})
+    Fire({"export": export, "import": upload, "stats": stats, "release-notes": release_notes})
