@@ -14,52 +14,46 @@ import urllib3
 from tabulate import tabulate
 from fire import Fire
 import numpy as np
+from requests.exceptions import HTTPError
 
 # pylint: disable=import-error
-from packages import slack, utils, log
+from packages import slack, utils, log, session
 # pylint: enable=import-error
 
 
-def upload(filepath, cookie: str = "", team: str = "", token: str = ""):
-    """Upload a directory of files to the slack team"""
-    cookie, team_name, token, _ = utils.arg_envs(cookie, team, token)
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+def import_emoji(filepath):
+    """Upload a directory of files to a slack team"""
     logger = log.get_logger()
-    session = utils.new_session(cookie, team_name, token)
-    existing_emojis = slack.get_current_emoji_list(session)
-    uploaded = 0
-    skipped = 0
+    cookie, team_name, token, _ = utils.arg_envs()
+    _session = session.new_session(cookie, team_name, token)
+    try:
+        existing_emojis = slack.get_current_emoji_list(_session)
+    except slack.SlackImportException as sie:
+        logger.error("Unable to get current emojis", error=sie)
+        return
 
-    def process_file(filename):
-        nonlocal skipped
-        nonlocal uploaded
-        logger.info(f"Processing {filename}.")
+    logger.debug("")
+    for filename in utils.preprocess_slackmoji(filepath):
         emoji_name = f"{os.path.splitext(os.path.basename(filename))[0]}"
+        logger.info(f"Processing {filename}.")
+
         if emoji_name in existing_emojis:
             logger.debug(f"Skipping {emoji_name}. Emoji already exists")
-            skipped += 1
+            continue
         else:
-            slack.upload_emoji(session, emoji_name, filename)
-            logger.info(f"{filename} upload complete.")
-            uploaded += 1
-
-    for slackmoji_file in [filepath]:
-
-        if os.path.isdir(slackmoji_file):
-            for file in os.listdir(slackmoji_file):
-                filename = os.path.join(slackmoji_file, file)
-                process_file(filename)
-        else:
-            process_file(slackmoji_file)
-    logger.info(f"\nUploaded {uploaded} emojis. ({skipped} already existed)")
+            try:
+                slack.upload_emoji(_session, emoji_name, filename, logger)
+                logger.info(f"{filename} upload complete.")
+            except HTTPError as he:
+                logger.error("Bad response status when uploading", error=he)
 
 
-def stats(cookie: str = "", team: str = "", token: str = ""):
+def stats():
     """getting statistics"""
-    cookie, team_name, token, _ = utils.arg_envs(cookie, team, token)
+    cookie, team_name, token, _ = utils.arg_envs()
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    session = utils.new_session(cookie, team_name, token)
-    existing_emojis = slack.get_current_emoji_list(session, all_data=True)
+    _session = session.new_session(cookie, team_name, token)
+    existing_emojis = slack.get_current_emoji_list(_session)
     userstats = {}
     for emoji in existing_emojis:
         try:
@@ -81,44 +75,35 @@ def stats(cookie: str = "", team: str = "", token: str = ""):
     print(f"Bottom Quartile: {q3}")
 
 
-def export(
-    cookie: str = "",
-    team: str = "",
-    token: str = "",
-    export_dir: str = "./export",
-    concurrency: int = 1,
-):
+def export_emoji(export_dir: str = "./export"):
     """handle the exporting of all emoji from a slack instance"""
-    cookie, team_name, token, concurrency = utils.arg_envs(
-        cookie, team, token, concurrency=concurrency
-    )
+    cookie, team_name, token, concurrency = utils.arg_envs()
     os.makedirs(export_dir, exist_ok=True)
+
     loop = asyncio.new_event_loop()
     loop.run_until_complete(
         slack.export_loop(
-            team_name=team_name, cookie=cookie, token=token, directory=export_dir
+            team_name=team_name,
+            cookie=cookie,
+            token=token,
+            directory=export_dir,
+            concurrency=concurrency
         )
     )
 
-def release_notes(
-        cookie:str='',
-        token:str='',
-        team:str='',
-        end:str='',
-        start:str=str(dt.now() - rdt.relativedelta(days=14))):
+def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14))):
     """print the release notes"""
 
-    cookie, team_name, token, _ = utils.arg_envs(cookie, team, token)
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    session = utils.new_session(cookie, team_name, token)
+    cookie, team_name, token, _ = utils.arg_envs()
+    _session = session.new_session(cookie, team_name, token)
 
     _start = dtparse.parse(start)
     if end != '':
         _end = dtparse.parse(end)
     else:
         _end = dt.now()
-        
-    existing_emojis = slack.get_current_emoji_list(session, all_data=True)
+
+    existing_emojis = slack.get_current_emoji_list(_session)
 
     span = list(
                 filter(
@@ -151,5 +136,11 @@ def release_notes(
 
 
 
+
 if __name__ == "__main__":
-    Fire({"export": export, "import": upload, "stats": stats, "release-notes": release_notes})
+    Fire({
+        "export": export_emoji, 
+        "import": import_emoji, 
+        "stats": stats, 
+        "release-notes": release_notes
+        })
