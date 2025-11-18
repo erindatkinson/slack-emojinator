@@ -19,6 +19,20 @@ class NoEmojiException(Exception):
     """Class for empty response errors"""
 
 
+def post_message(_session:session.Session, channel:str, markdown:str):
+    """posts message to slack"""
+    message_url = "https://slack.com/api/chat.postMessage"
+
+    params = {
+        "token": _session.api_token,
+        "channel": channel,
+        "as_user": True,
+        "markdown_text": markdown + "\n (This was sent via API)"
+    }
+
+    return _session.post(message_url, data=params, verify=False)
+
+
 def upload_emoji(
         _session: session.Session, emoji_name: str, filename: str, logger=log.get_logger()):
     """uploads the emoji data to slack"""

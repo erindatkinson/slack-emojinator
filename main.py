@@ -94,6 +94,9 @@ def export_emoji(export_dir: str = "./export"):
 def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14))):
     """print the release notes"""
 
+    # set up the prereq variables
+    logger = log.get_logger()
+    channel = os.getenv("SLACK_RELEASE_CHANNEL")
     cookie, team_name, token, _ = utils.arg_envs()
     _session = session.new_session(cookie, team_name, token)
 
@@ -103,38 +106,31 @@ def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14
     else:
         _end = dt.now()
 
+    # pull current emoji json details, filter, and build output lists
     existing_emojis = slack.get_current_emoji_list(_session)
+    span = utils.filter_emojis_to_span(_start, _end, existing_emojis)
+    list_items = utils.format_emojis_into_string_list(span)
+    ranks = utils.build_user_ranks(span)
 
-    span = list(
-                filter(
-                    lambda x:
-                        x['created'] <= _end.timestamp() and x['created'] > _start.timestamp(),
-                    sorted(
-                        existing_emojis,
-                        key=lambda x: x['name'])))
-
-    list_items = list(map(lambda x: f"* :{x['name']}: | `{x['name']}`", span))
-
-    ranks = {}
-    for item in span:
-        try:
-            ranks[item['user_display_name']] += 1
-        except KeyError:
-            ranks[item['user_display_name']] = 1
-    sorted_ranks = sorted(ranks.items(), key=lambda x: x[1], reverse=True)
-
-
+    # load jinja templates
     tpls = utils.load_templates(".")
     rn_tpl = tpls.get_template("release_notes.md.jinja2")
-    print(rn_tpl.render(
+
+    # render output
+    markdown = rn_tpl.render(
         start=_start.strftime("%Y-%m-%d"),
         end=_end.strftime("%Y-%m-%d"),
-        ranks=tabulate(sorted_ranks),
+        ranks=tabulate(ranks),
         emojis=list_items
         )
-    )
 
-
+    # post to slack or print to local
+    if len(markdown) <= 12_000:
+        slack.post_message(_session, channel, markdown)
+    else:
+        logger.warn("message is over slack's posting limit of 12,000 characters",
+                    length=len(markdown))
+        print(markdown)
 
 
 if __name__ == "__main__":
