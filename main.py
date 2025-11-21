@@ -112,21 +112,35 @@ def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14
     list_items = utils.format_emojis_into_string_list(span)
     ranks = utils.build_user_ranks(span)
 
+
     # load jinja templates
     tpls = utils.load_templates(".")
     rn_tpl = tpls.get_template("release_notes.md.jinja2")
+    header_tpl = tpls.get_template("header.md.jinja2")
+
 
     # render output
     markdown = rn_tpl.render(
-        start=_start.strftime("%Y-%m-%d"),
-        end=_end.strftime("%Y-%m-%d"),
         ranks=tabulate(ranks),
         emojis=list_items
         )
 
+
     # post to slack or print to local
     if len(markdown) <= 12_000:
-        slack.post_message(_session, channel, markdown)
+        resp = slack.post_message(
+            _session,
+            channel, header_tpl.render(
+                start= _start.strftime("%Y-%m-%d"),
+                end=_end.strftime("%Y-%m-%d")
+            ))
+        try:
+
+            if resp.status_code == 200:
+                msg_details = resp.json()
+                slack.post_message(_session, channel, markdown, msg_details["ts"])
+        except KeyError:
+            logger.error("failed posting thread message", json=msg_details)
     else:
         logger.warn("message is over slack's posting limit of 12,000 characters",
                     length=len(markdown))

@@ -19,7 +19,7 @@ class NoEmojiException(Exception):
     """Class for empty response errors"""
 
 
-def post_message(_session:session.Session, channel:str, markdown:str):
+def post_message(_session:session.Session, channel:str, markdown:str, thread_ts=None):
     """posts message to slack"""
     message_url = "https://slack.com/api/chat.postMessage"
 
@@ -29,6 +29,9 @@ def post_message(_session:session.Session, channel:str, markdown:str):
         "as_user": True,
         "markdown_text": markdown + "\n (This was sent via API)"
     }
+
+    if thread_ts is not None:
+        params.update({"thread_ts": thread_ts})
 
     return _session.post(message_url, data=params, verify=False)
 
