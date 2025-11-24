@@ -8,143 +8,94 @@ import os
 import os.path
 from datetime import datetime as dt
 import dateutil.relativedelta as rdt
-import dateutil.parser as dtparse
 
-import urllib3
+
 from tabulate import tabulate
 from fire import Fire
 import numpy as np
-from requests.exceptions import HTTPError
 
 # pylint: disable=import-error
 from packages import slack, utils, log, session
 # pylint: enable=import-error
 
 
-def import_emoji(filepath):
-    """Upload a directory of files to a slack team"""
-    logger = log.get_logger()
-    cookie, team_name, token, _ = utils.arg_envs()
-    _session = session.new_session(cookie, team_name, token)
-    try:
-        existing_emojis = slack.get_current_emoji_list(_session)
-    except slack.SlackImportException as sie:
-        logger.error("Unable to get current emojis", error=sie)
-        return
-
-    logger.debug("")
-    for filename in utils.preprocess_slackmoji(filepath):
-        emoji_name = f"{os.path.splitext(os.path.basename(filename))[0]}"
-        logger.info(f"Processing {filename}.")
-
-        if emoji_name in existing_emojis:
-            logger.debug(f"Skipping {emoji_name}. Emoji already exists")
-            continue
-        else:
-            try:
-                slack.upload_emoji(_session, emoji_name, filename, logger)
-                logger.info(f"{filename} upload complete.")
-            except HTTPError as he:
-                logger.error("Bad response status when uploading", error=he)
-
-
-def stats():
-    """getting statistics"""
-    cookie, team_name, token, _ = utils.arg_envs()
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    _session = session.new_session(cookie, team_name, token)
-    existing_emojis = slack.get_current_emoji_list(_session)
-    userstats = {}
-    for emoji in existing_emojis:
-        try:
-            userstats[emoji["user_display_name"]] += 1
-        except KeyError:
-            userstats[emoji["user_display_name"]] = 1
-    print(tabulate(sorted(userstats.items(), key=lambda x: x[1], reverse=True)[:25]))
-
-    df = np.array(list(userstats.values()))
-    ninety_nine_q = np.percentile(df, 99)
-    print(f"99th Percentile: {ninety_nine_q}")
-    ninety_q = np.percentile(df, 90)
-    print(f"90th Percentile: {ninety_q}")
-    q1 = np.percentile(df, 75)
-    print(f"Top Quartile: {q1}")
-    q2 = np.percentile(df, 50)
-    print(f"Middle Quartile: {q2}")
-    q3 = np.percentile(df, 25)
-    print(f"Bottom Quartile: {q3}")
+def import_emoji(filepath:str):
+    """Import all emoji in the given filepath to the connected slack team"""
+    client = slack.Slack(session.new_session(), log.get_logger())
+    client.import_emoji(filepath)
 
 
 def export_emoji(export_dir: str = "./export"):
-    """handle the exporting of all emoji from a slack instance"""
-    cookie, team_name, token, concurrency = utils.arg_envs()
+    """Export all emoji in the connected slack team into the given export_dir"""
+    client = slack.Slack(session.new_session(), log.get_logger())
     os.makedirs(export_dir, exist_ok=True)
 
     loop = asyncio.new_event_loop()
     loop.run_until_complete(
-        slack.export_loop(
-            team_name=team_name,
-            cookie=cookie,
-            token=token,
-            directory=export_dir,
-            concurrency=concurrency
-        )
+        client.export_emoji(directory=export_dir)
     )
 
+
 def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14))):
-    """print the release notes"""
+    """Retrieve the emojis uploaded within the span of time and, if within Slack's
+    message limits, post formatted list to a slack channel, otherwise, print to
+    standard out"""
 
     # set up the prereq variables
     logger = log.get_logger()
     channel = os.getenv("SLACK_RELEASE_CHANNEL")
-    cookie, team_name, token, _ = utils.arg_envs()
-    _session = session.new_session(cookie, team_name, token)
-
-    _start = dtparse.parse(start)
-    if end != '':
-        _end = dtparse.parse(end)
-    else:
-        _end = dt.now()
+    client = slack.Slack(session.new_session(), logger)
 
     # pull current emoji json details, filter, and build output lists
-    existing_emojis = slack.get_current_emoji_list(_session)
+    _start, _end = utils.setup_duration_span(start, end)
+    start_str, end_str = _start.strftime("%Y-%m-%d"), _end.strftime("%Y-%m-%d")
+    existing_emojis = client.list_emoji()
     span = utils.filter_emojis_to_span(_start, _end, existing_emojis)
     list_items = utils.format_emojis_into_string_list(span)
     ranks = utils.build_user_ranks(span)
-
 
     # load jinja templates
     tpls = utils.load_templates(".")
     rn_tpl = tpls.get_template("release_notes.md.jinja2")
     header_tpl = tpls.get_template("header.md.jinja2")
 
-
     # render output
-    markdown = rn_tpl.render(
-        ranks=tabulate(ranks),
-        emojis=list_items
-        )
-
+    header = header_tpl.render(start=start_str, end=end_str)
+    markdown = rn_tpl.render(ranks=tabulate(ranks), emojis=list_items)
 
     # post to slack or print to local
     if len(markdown) <= 12_000:
-        resp = slack.post_message(
-            _session,
-            channel, header_tpl.render(
-                start= _start.strftime("%Y-%m-%d"),
-                end=_end.strftime("%Y-%m-%d")
-            ))
+        resp = client.post_message(header, channel)
         try:
-
             if resp.status_code == 200:
-                msg_details = resp.json()
-                slack.post_message(_session, channel, markdown, msg_details["ts"])
+                client.post_message(markdown, channel, resp.json()["ts"])
         except KeyError:
-            logger.error("failed posting thread message", json=msg_details)
+            logger.error("failed posting thread message", json=resp.json())
     else:
         logger.warn("message is over slack's posting limit of 12,000 characters",
                     length=len(markdown))
         print(markdown)
+
+
+def stats():
+    """Calculate some statistics about the slack team, mainly
+    top 25 uploaders, and the percentile breakdown for uploads"""
+    logger = log.get_logger()
+    client = slack.Slack(session.new_session(), logger)
+    existing_emojis = client.list_emoji()
+    userstats, df = utils.process_stats(existing_emojis)
+
+    tpls = utils.load_templates(".")
+    tpls.globals['tabulate'] = tabulate
+    stats_tpl = tpls.get_template("stats.md.jinja2")
+    print(stats_tpl.render(
+        top_25=sorted(userstats.items(), key=lambda x: x[1], reverse=True)[:25],
+        pc_99=np.percentile(df, 99),
+        pc_90=np.percentile(df, 90),
+        pc_75=np.percentile(df, 75),
+        pc_50=np.percentile(df, 50),
+        pc_25=np.percentile(df, 25),
+    ))
 
 
 if __name__ == "__main__":

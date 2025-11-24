@@ -1,8 +1,33 @@
 """Module to handle sessions"""
 
 import os
-
+from datetime import datetime as dt
+import dateutil.parser as dtparse
 from jinja2 import FileSystemLoader, Environment
+import numpy as np
+from numpy.typing import NDArray
+
+def setup_duration_span(start, end)->tuple:
+    """set the duration for running stats gathering"""
+    _start = dtparse.parse(start)
+    if end != '':
+        _end = dtparse.parse(end)
+    else:
+        _end = dt.now()
+    return (_start, _end)
+
+
+def process_stats(emojis)-> tuple[dict, NDArray]:
+    """Build userstats"""
+    userstats = {}
+    for emoji in emojis:
+        try:
+            userstats[emoji["user_display_name"]] += 1
+        except KeyError:
+            userstats[emoji["user_display_name"]] = 1
+
+    df = np.array(list(userstats.values()))
+    return(userstats, df)
 
 
 def preprocess_slackmoji(slackmoji):
@@ -16,29 +41,12 @@ def preprocess_slackmoji(slackmoji):
     return [filename]
 
 
-def arg_envs() -> tuple:
-    """Pull args from env if needed, and assert requirements"""
-    cookie = os.getenv("SLACK_COOKIE")
-    team_name = os.getenv("SLACK_TEAM")
-    token = os.getenv("SLACK_TOKEN")
-    concurrency = int(os.getenv("SLACK_CONCURRENCY", '1'))
-
-    assert cookie, "Either SLACK_COOKIE env var, or --cookie param must be set"
-    assert team_name, "Either SLACK_TEAM env var, or --team param must be set"
-    assert token, "Either SLACK_TOKEN env var, or --token param must be set"
-    assert (
-        concurrency
-    ), "Either SLACK_CONCURRENCY env var, or --concurrency param must be set"
-
-    return (cookie, team_name, token, concurrency)
-
-
 def load_templates(tpl_dir:str)->Environment:
     """Load templates from directory"""
     return Environment(loader=FileSystemLoader([tpl_dir, './templates']))
 
 
-def filter_emojis_to_span(start, end, current)->list:
+def filter_emojis_to_span(start:dt, end:dt, emojis:list)->list:
     """filters current emoji list between times"""
 
     return list(
@@ -46,7 +54,7 @@ def filter_emojis_to_span(start, end, current)->list:
                     lambda x:
                         x['created'] <= end.timestamp() and x['created'] > start.timestamp(),
                     sorted(
-                        current,
+                        emojis,
                         key=lambda x: x['name'])))
 
 def format_emojis_into_string_list(emojis:list)->list:
