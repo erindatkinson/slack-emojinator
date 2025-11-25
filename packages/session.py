@@ -24,6 +24,7 @@ class Session(requests.Session):
         self.url_list = URL_LIST.format(team_name=team_name)
         self.api_token = token
         self.concurrency = concurrency
+        self.team_name = team_name
 
     def asyncer(self)-> aiohttp.ClientSession:
         """give an async session from this session"""

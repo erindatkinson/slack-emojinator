@@ -7,7 +7,7 @@ import time
 from requests import Response
 from requests.exceptions import HTTPError
 
-from . import log, session, utils
+from . import log, session, utils, db
 
 
 class SlackExportException(Exception):
@@ -26,6 +26,8 @@ class Slack:
         self.session = _session
         self.api_token = _session.api_token
         self.concurrency = _session.concurrency
+        self.team_name = _session.team_name
+        db.connect()
 
         if logger is not None:
             self.log = logger
@@ -74,17 +76,18 @@ class Slack:
     def import_emoji(self, filepath:str):
         """Run loop for importing all emoji in a filepath"""
         try:
+            self.log.info("Retrieving existing emojis")
             existing_emojis = self.list_emoji()
         except SlackImportException as sie:
-            self.log.error("Unable to get current emojis", error=sie)
+            self.log.error("Unable to retrieve existing emojis", error=sie)
             return
 
         for filename in utils.preprocess_slackmoji(filepath):
             emoji_name = f"{os.path.splitext(os.path.basename(filename))[0]}"
             self.log.info(f"Processing {filename}.")
 
-            if emoji_name in existing_emojis:
-                self.log.debug(f"Skipping {emoji_name}. Emoji already exists")
+            if emoji_name in list(map(lambda emoji: emoji["name"], existing_emojis)):
+                self.log.warn(f"Skipping {emoji_name}. Emoji already exists")
                 continue
             else:
                 try:
@@ -98,13 +101,21 @@ class Slack:
         """Export emoji asynchronously"""
         if not os.path.exists(directory):
             os.makedirs(directory)
-        emojis = self.list_emoji()
-        if len(emojis) == 0:
+        self.log.info("Retrieving list of emojis")
+        slack_emojis = self.list_emoji()
+        if len(slack_emojis) == 0:
             raise NoEmojiException("Failed to find any custom emoji")
-        function_http_get = self.__concurrent_http_get()
-        for future in asyncio.as_completed([function_http_get(emoji) for emoji in emojis]):
-            emoji, data = await future
-            self.__save_to_file(data, emoji, directory)
+        
+        self.log.info("filtering previously downloaded emojis")
+        emojis = db.filter_downloaded_emoji(self.team_name, slack_emojis)
+        if len(emojis) == 0:
+            self.log.info("No new emojis available to download")
+            return
+        async with self.session.asyncer() as aio_session:
+            function_http_get = self.__concurrent_http_get(aio_session=aio_session)
+            for future in asyncio.as_completed([function_http_get(emoji) for emoji in emojis]):
+                emoji, data = await future
+                self.__save_to_file(data, emoji, directory)
 
         self.log.info(
             "Exported %s custom emoji to directory '%s'", len(emojis), {directory}
@@ -113,20 +124,21 @@ class Slack:
 
     def __save_to_file(self, response:bytes, emoji:dict, directory:str):
         """Save the raw data to a file"""
-        self.log.info("Downloaded %s from %s", emoji['name'].ljust(20), emoji['url'])
+        self.log.info("Downloaded emoji", emoji=emoji['name'], url=emoji['url'])
         out_fn = f"{emoji['name']}.{str(emoji['url'].rsplit(".", maxsplit=1)[-1])}"
         with open(os.path.join(directory, out_fn), "wb") as out:
             out.write(response)
+        db.mark_emoji_downloaded(self.team_name, emoji["name"])
 
 
-    def __concurrent_http_get(self):
+    def __concurrent_http_get(self, aio_session):
         """get emoji data"""
         semaphore = asyncio.Semaphore(self.concurrency)
 
         async def http_get(emoji: dict):
             nonlocal semaphore
             async with semaphore:
-                response = await self.session.asyncer().get(emoji['url'], ssl=False)
+                response = await aio_session.get(emoji['url'], ssl=False)
                 body = await response.content.read()
                 await response.wait_for_close()
             return emoji, body

@@ -6,6 +6,7 @@ import dateutil.parser as dtparse
 from jinja2 import FileSystemLoader, Environment
 import numpy as np
 from numpy.typing import NDArray
+from .db import create_tables, run_migrations, get_database
 
 def setup_duration_span(start, end)->tuple:
     """set the duration for running stats gathering"""
@@ -33,12 +34,12 @@ def process_stats(emojis)-> tuple[dict, NDArray]:
 def preprocess_slackmoji(slackmoji):
     """Process the slackmoji to get fn and name"""
     if os.path.isdir(slackmoji):
+        files = []
         for file in os.listdir(slackmoji):
-            filename = os.path.join(slackmoji, file)
+            files.append(os.path.join(slackmoji, file))
+        return files
     else:
-        filename = slackmoji
-
-    return [filename]
+        return [slackmoji]
 
 
 def load_templates(tpl_dir:str)->Environment:
@@ -70,3 +71,12 @@ def build_user_ranks(emojis:list)->list:
         except KeyError:
             ranks[item['user_display_name']] = 1
     return sorted(ranks.items(), key=lambda x: x[1], reverse=True)
+
+def setup(migrate:bool=False):
+    """various setup tasks"""
+    if not os.path.isfile(get_database()):
+        create_tables()
+        run_migrations()
+    else:
+        if migrate:
+            run_migrations()

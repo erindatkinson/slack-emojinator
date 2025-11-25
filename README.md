@@ -28,48 +28,15 @@ You'll need to provide your team name (the bit before ".slack.com" in your admin
 * copy that token, and copy the request "as curl" into a text editor
 * pull the cookie string from the `-b` flag.
 
-```bash
-cp .env.example .env
-${EDITOR} .env
-source .env
+```sh
+export SLACK_TEAM=example-team-subdomain
+export SLACK_COOKIE='b=<data>; shown_ssb_redirect_page=1; ...; PageCount=99'
+export SLACK_TOKEN=xoxc-<numbers>
+export SLACK_CONCURRENCY=1
+export SLACK_RELEASE_CHANNEL=C0123456789
 ```
 
 Now you're ready to go!
-
-## Importing Emoji
-
-```bash
-make upload
-```
-
-## Exporting Emoji
-
-```bash
-source .env
-make download
-```
-
-## Docker
-
-If you'd rather run this through docker, you can run everything the same as before, ensuring you sourced a filled .env file:
-
-### Docker: Import
-
-Put emoji in `./import`
-
-```bash
-source .env
-make docker-import
-```
-
-### Docker: Export
-
-Put emoji in `./export`
-
-```bash
-source .env
-make docker-export
-```
 
 ## Available commands
 
@@ -77,6 +44,18 @@ If you want to know all the commands you can run, just run
 
 ```bash
 make help
+```
+
+```text
+ all:                   Sets up pipenv requirements both locally and for docker
+ build-docker:          Builds docker image with Pipenv requirements
+ docker-export:         Exports emoji from your slack team to the ./export/ directory using docker
+ docker-import:         Imports emoji from the ./import/ directory to your slack team using docker
+ download:              Exports emoji from your slack team to the ./export/ directory
+ help:                  Prints make target help information from comments in makefile.
+ lint:                  Runs pylint on the directory
+ setup:                 Installs Pipenv requirements locally
+ upload:                Imports emoji from the ./import/ directory to your slack team
 ```
 
 💜

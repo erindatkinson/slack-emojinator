@@ -103,5 +103,6 @@ if __name__ == "__main__":
         "export": export_emoji, 
         "import": import_emoji, 
         "stats": stats, 
-        "release-notes": release_notes
+        "release-notes": release_notes,
+        "setup": utils.setup
         })
