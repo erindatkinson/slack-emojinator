@@ -97,7 +97,6 @@ def stats():
         pc_25=np.percentile(df, 25),
     ))
 
-
 if __name__ == "__main__":
     Fire({
         "export": export_emoji, 

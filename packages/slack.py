@@ -77,16 +77,19 @@ class Slack:
         """Run loop for importing all emoji in a filepath"""
         try:
             self.log.info("Retrieving existing emojis")
-            existing_emojis = self.list_emoji()
+            existing_emojis = [emoji["name"] for emoji in self.list_emoji()]
         except SlackImportException as sie:
             self.log.error("Unable to retrieve existing emojis", error=sie)
             return
 
-        for filename in utils.preprocess_slackmoji(filepath):
+        to_upload = utils.preprocess_slackmoji(filepath, existing_emojis)
+        self.log.info("uploading emojis", count=len(to_upload))
+
+        for filename in to_upload:
             emoji_name = f"{os.path.splitext(os.path.basename(filename))[0]}"
             self.log.info(f"Processing {filename}.")
 
-            if emoji_name in list(map(lambda emoji: emoji["name"], existing_emojis)):
+            if emoji_name in existing_emojis:
                 self.log.warn(f"Skipping {emoji_name}. Emoji already exists")
                 continue
             else:
@@ -105,7 +108,7 @@ class Slack:
         slack_emojis = self.list_emoji()
         if len(slack_emojis) == 0:
             raise NoEmojiException("Failed to find any custom emoji")
-        
+
         self.log.info("filtering previously downloaded emojis")
         emojis = db.filter_downloaded_emoji(self.team_name, slack_emojis)
         if len(emojis) == 0:

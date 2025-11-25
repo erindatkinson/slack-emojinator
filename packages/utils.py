@@ -31,13 +31,16 @@ def process_stats(emojis)-> tuple[dict, NDArray]:
     return(userstats, df)
 
 
-def preprocess_slackmoji(slackmoji):
+def preprocess_slackmoji(slackmoji, existing_names):
     """Process the slackmoji to get fn and name"""
     if os.path.isdir(slackmoji):
         files = []
         for file in os.listdir(slackmoji):
-            files.append(os.path.join(slackmoji, file))
-        return files
+            name, ext = os.path.splitext(file)
+            files.append((slackmoji, name, ext))
+        filtered = list(filter(lambda f: f[1] not in existing_names, files))
+
+        return list(map(lambda f: os.path.join(f[0], f"{f[1]}{f[2]}"), filtered))
     else:
         return [slackmoji]
 
