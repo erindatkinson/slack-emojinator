@@ -19,7 +19,13 @@ cd slack-emojinator
 pipenv install
 ```
 
-You'll need to provide your team name (the bit before ".slack.com" in your admin URL) api token and your session cookie (grab them from your browser). Copy `.env.example`, fill them in, and source it.
+Create the download cache database (to not download emoji's you've downloaded before)
+
+```bash
+make setup
+```
+
+Additionally ou'll need to provide your team name (the bit before ".slack.com" in your admin URL) api token and your session cookie (grab them from your browser). Copy `.env.example`, fill them in, and source it.
 
 ### To grab your Slack session cookie and api token
 
