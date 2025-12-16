@@ -5,7 +5,9 @@ package cmd
 
 import (
 	"log/slog"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
 	"github.com/spf13/cobra"
@@ -23,9 +25,17 @@ var importCmd = &cobra.Command{
 			viper.GetString("token"),
 			viper.GetString("cookie"))
 
-		if err := client.ImportEmoji("1password_test", filepath.Join(inputDir, "1password.png")); err != nil {
-			slog.Error("error importing", "error", err)
-			return
+		files, err := os.ReadDir(inputDir)
+		if err != nil {
+			slog.Error("error reading files")
+		}
+
+		for _, file := range files {
+			splits := strings.Split(file.Name(), ".")
+			if err := client.ImportEmoji(splits[0]+"_test", filepath.Join(inputDir, file.Name())); err != nil {
+				slog.Error("error importing", "error", err)
+				return
+			}
 		}
 	},
 }

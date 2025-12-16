@@ -11,7 +11,9 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type Client struct {
@@ -105,6 +107,8 @@ func (c *Client) ExportEmoji(emoji Emoji, dir string) error {
 }
 
 func (c *Client) ImportEmoji(name, fPath string) error {
+	slog.Info("importing emoji", "name", name)
+
 	buf := new(bytes.Buffer)
 	writer := multipart.NewWriter(buf)
 
@@ -122,6 +126,7 @@ func (c *Client) ImportEmoji(name, fPath string) error {
 	contentType := writer.FormDataContentType()
 
 	uri := fmt.Sprintf("https://%s.slack.com/api/emoji.add", c.team)
+
 	req, err := http.NewRequest(http.MethodPost, uri, buf)
 	if err != nil {
 		return err
@@ -129,25 +134,33 @@ func (c *Client) ImportEmoji(name, fPath string) error {
 	c.setHeaders(req)
 	req.Header.Set("Content-Type", contentType)
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
+	for attempts := 0; attempts < 3; attempts++ {
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode == http.StatusTooManyRequests {
+			retry := resp.Header.Get("Retry-After")
+			seconds, err := strconv.Atoi(retry)
+			if err != nil {
+				return err
+			}
+			time.Sleep(time.Duration(seconds) * time.Second)
+			continue
+		}
+
+		defer resp.Body.Close()
+
+		var data map[string]any
+		err = json.NewDecoder(resp.Body).Decode(&data)
+		if err != nil {
+			return err
+		}
+		slog.Info("response", "code", resp.StatusCode, "data", data)
+		return nil
 	}
 
-	if resp.StatusCode == http.StatusTooManyRequests {
-		// TODO: retries
-	}
-
-	defer resp.Body.Close()
-
-	var data map[string]any
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	if err != nil {
-		return err
-	}
-	slog.Info("response", "code", resp.StatusCode, "data", data)
-
-	return nil
+	return fmt.Errorf("attempted 3 times and failed")
 }
 
 func (c *Client) setHeaders(req *http.Request) {
