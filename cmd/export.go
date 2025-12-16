@@ -17,7 +17,7 @@ import (
 // exportCmd represents the export command
 var exportCmd = &cobra.Command{
 	Use:   "export",
-	Short: "Pull all emoji from the given slack team",
+	Short: "Pull all emoji from a given slack team",
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := utilities.CheckEnvs(); err != nil {
 			slog.Error(err.Error())

@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"os"
@@ -102,14 +104,65 @@ func (c *Client) ExportEmoji(emoji Emoji, dir string) error {
 	return nil
 }
 
-func (c *Client) ImportEmoji() {
+func (c *Client) ImportEmoji(name, fPath string) error {
+	buf := new(bytes.Buffer)
+	writer := multipart.NewWriter(buf)
 
+	addField(writer, "mode", "data")
+	addField(writer, "name", name)
+	addField(writer, "token", c.token)
+	imgWriter, _ := writer.CreateFormFile("image", filepath.Base(fPath))
+	fp, err := os.Open(fPath)
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+	io.Copy(imgWriter, fp)
+	writer.Close()
+	contentType := writer.FormDataContentType()
+
+	uri := fmt.Sprintf("https://%s.slack.com/api/emoji.add", c.team)
+	req, err := http.NewRequest(http.MethodPost, uri, buf)
+	if err != nil {
+		return err
+	}
+	c.setHeaders(req)
+	req.Header.Set("Content-Type", contentType)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		// TODO: retries
+	}
+
+	defer resp.Body.Close()
+
+	var data map[string]any
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		return err
+	}
+	slog.Info("response", "code", resp.StatusCode, "data", data)
+
+	return nil
 }
 
 func (c *Client) setHeaders(req *http.Request) {
 	req.Header.Set("Accept-Encoding", "identity")
 	req.Header.Set("Cookie", c.cookie)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+}
+
+func addField(wrapper *multipart.Writer, name, data string) error {
+	writer, err := wrapper.CreateFormField(name)
+	if err != nil {
+		return err
+	}
+	writer.Write([]byte(data))
+	return nil
 }
 
 func parseFile(uri string) (string, error) {
