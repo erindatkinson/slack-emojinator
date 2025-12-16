@@ -4,10 +4,9 @@ Copyright © 2025 Erin Atkinson
 package cmd
 
 import (
-	"log/slog"
 	"os"
 
-	"github.com/erindatkinson/slack-emojinator/internal/slack"
+	"github.com/erindatkinson/slack-emojinator/internal/utilities"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -15,28 +14,22 @@ import (
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "slack-emojinator",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "A tool to bulk import and export slack emojis",
+	// Run: func(cmd *cobra.Command, args []string) {
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	// 	client := slack.NewSlackClient(
+	// 		viper.GetString("team"),
+	// 		viper.GetString("token"),
+	// 		viper.GetString("cookie"),
+	// 	)
 
-		client := slack.NewSlackClient(
-			viper.GetString("team"),
-			viper.GetString("token"),
-			viper.GetString("cookie"),
-		)
+	// 	emojis, err := client.ListEmoji()
+	// 	if err != nil {
+	// 		slog.Error("error getting emojis", "error", err)
+	// 	}
 
-		emojis, err := client.ListEmoji()
-		if err != nil {
-			slog.Error("error getting emojis", "error", err)
-		}
-
-		slog.Info("emojis", "count", len(emojis))
-	},
+	// 	slog.Info("emojis", "count", len(emojis))
+	// },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -55,9 +48,12 @@ func init() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	viper.SetEnvPrefix("slack")
-	viper.BindEnv("team")
-	viper.BindEnv("cookie")
-	viper.BindEnv("token")
-	viper.BindEnv("concurrency")
+
+	for _, env := range utilities.Envs {
+		viper.BindEnv(env)
+	}
+
+	viper.SetDefault("concurrency", "1")
 	viper.AutomaticEnv() // read in environment variables that match
+
 }

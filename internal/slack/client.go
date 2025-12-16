@@ -7,6 +7,9 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 type Client struct {
@@ -59,6 +62,8 @@ func (c *Client) ListEmoji() ([]Emoji, error) {
 			return []Emoji{}, err
 		}
 
+		resp.Body.Close()
+
 		if data.Ok {
 			emojis = append(emojis, data.Emoji...)
 			if data.Paging.Page+1 > data.Paging.Pages {
@@ -72,8 +77,29 @@ func (c *Client) ListEmoji() ([]Emoji, error) {
 	}
 }
 
-func (c *Client) ExportEmoji() {
+func (c *Client) ExportEmoji(emoji Emoji, dir string) error {
+	name, err := parseFile(emoji.URL)
+	if err != nil {
+		return err
+	}
 
+	fp, err := os.Create(filepath.Join(dir, name))
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+
+	resp, err := http.Get(emoji.URL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("bad request (%d)", resp.StatusCode)
+	}
+
+	fp.ReadFrom(resp.Body)
+	return nil
 }
 
 func (c *Client) ImportEmoji() {
@@ -84,4 +110,20 @@ func (c *Client) setHeaders(req *http.Request) {
 	req.Header.Set("Accept-Encoding", "identity")
 	req.Header.Set("Cookie", c.cookie)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+}
+
+func parseFile(uri string) (string, error) {
+	obj, err := url.Parse(uri)
+	if err != nil {
+		return "", err
+	}
+
+	splits := strings.Split(obj.Path, "/")
+	name, err := url.PathUnescape(splits[2])
+	if err != nil {
+		return "", err
+	}
+
+	ext := filepath.Ext(obj.Path)
+	return name + ext, nil
 }
