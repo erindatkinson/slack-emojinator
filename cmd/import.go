@@ -32,8 +32,7 @@ var importCmd = &cobra.Command{
 
 		for _, file := range files {
 			splits := strings.Split(file.Name(), ".")
-			// TODO: remove _test
-			if err := client.ImportEmoji(splits[0]+"_test", filepath.Join(inputDir, file.Name())); err != nil {
+			if err := client.ImportEmoji(splits[0], filepath.Join(inputDir, file.Name())); err != nil {
 				slog.Error("error importing", "error", err)
 				return
 			}
