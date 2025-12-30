@@ -36,7 +36,7 @@ def export_emoji(export_dir: str = "./export"):
     )
 
 
-def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14))):
+def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14)), dry:bool=False):
     """Retrieve the emojis uploaded within the span of time and, if within Slack's
     message limits, post formatted list to a slack channel, otherwise, print to
     standard out"""
@@ -64,7 +64,7 @@ def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14
     markdown = rn_tpl.render(ranks=tabulate(ranks), emojis=list_items)
 
     # post to slack or print to local
-    if len(markdown) <= 12_000:
+    if len(markdown) <= 12_000 and not dry:
         resp = client.post_message(header, channel)
         try:
             if resp.status_code == 200:
@@ -74,6 +74,7 @@ def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14
     else:
         logger.warn("message is over slack's posting limit of 12,000 characters",
                     length=len(markdown))
+        print(header)
         print(markdown)
 
 
