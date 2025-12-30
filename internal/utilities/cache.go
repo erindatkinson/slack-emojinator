@@ -1,40 +1,24 @@
 package utilities
 
 import (
-	"github.com/dgraph-io/badger/v4"
+	"io/fs"
+	"path/filepath"
+	"strings"
 )
 
-var DB *badger.DB
-
-func SetupDB(fPath string) error {
-	var err error
-	DB, err = badger.Open(
-		badger.DefaultOptions(fPath).WithLoggingLevel(badger.ERROR))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func CloseDB() {
-	DB.Close()
-}
-
-func MarkDownloaded(key []byte) error {
-	return DB.Update(func(txn *badger.Txn) error {
-		return txn.Set(
-			[]byte(key),
-			[]byte("true"))
-	})
-}
-
-func CheckDownloaded(key []byte) error {
-	return DB.View(func(txn *badger.Txn) error {
-		_, err := txn.Get(key)
+func GetDownloadedEmojiList(directory string) ([]string, error) {
+	emojis := []string{}
+	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-
+		splits := strings.Split(d.Name(), ".")
+		emojis = append(emojis, splits[0])
 		return nil
 	})
+	if err != nil {
+		return []string{}, err
+	}
+
+	return emojis, nil
 }
