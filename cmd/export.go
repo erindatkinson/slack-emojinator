@@ -5,6 +5,8 @@ package cmd
 
 import (
 	"os"
+	"slices"
+	"strconv"
 
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
 	"github.com/erindatkinson/slack-emojinator/internal/utilities"
@@ -20,6 +22,8 @@ var exportCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		outputDir := cmd.Flag("directory").Value.String()
 		team := viper.GetString("team")
+		concurrency, _ := strconv.Atoi(cmd.Flag("concurrency").Value.String())
+
 		logger := utilities.NewLogger(
 			cmd.Flag("log-level").Value.String(),
 			"team", team, "dir", outputDir)
@@ -43,18 +47,27 @@ var exportCmd = &cobra.Command{
 			logger.Error("error retrieving current emoji list", "error", err)
 			return
 		}
+		cached, err := utilities.GetDownloadedEmojiList(outputDir)
+		if err != nil {
+			logger.Error("unable to get cached emojis", "error", err)
+		}
 
-		wp := workerpool.New(2)
+		wp := workerpool.New(concurrency)
 
 		for _, emoji := range currentEmoji {
-			loopLog := logger.With("name", emoji.Name)
-
 			request := emoji
 			wp.Submit(func() {
+				loopLog := logger.With("name", request.Name)
+				if slices.Contains(cached, request.Name) {
+					loopLog.Debug("already downloaded, skipping")
+					return
+				}
+
 				loopLog.Debug("exporting emoji")
 				if err := client.ExportEmoji(request, outputDir); err != nil {
 					loopLog.Error("error exporting", "error", err)
 				}
+
 			})
 		}
 
@@ -66,4 +79,5 @@ func init() {
 	rootCmd.AddCommand(exportCmd)
 	exportCmd.Flags().StringP("directory", "d", "./export/", "the directory to use to export")
 	exportCmd.Flags().String("log-level", "info", "enable debug logging")
+	exportCmd.Flags().IntP("concurrency", "c", 2, "worker concurrency")
 }
