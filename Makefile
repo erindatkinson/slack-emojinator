@@ -8,6 +8,9 @@ all: setup build-docker
 lint:
 	pipenv run pylint ./
 
+snapshot:
+	docker-compose run builder build --snapshot --clean
+
 ## build-docker:		Builds docker image with Pipenv requirements
 build-docker:
 	docker-compose build

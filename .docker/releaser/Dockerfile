@@ -1,0 +1,3 @@
+FROM goreleaser/goreleaser:v2.13.3
+
+WORKDIR /app

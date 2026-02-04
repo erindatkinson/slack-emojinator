@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/erindatkinson/slack-emojinator/internal/utilities"
 )
 
 type Client struct {
@@ -35,6 +37,7 @@ func (c *Client) PostMessage() {
 }
 
 func (c *Client) ListEmoji() ([]Emoji, error) {
+	logger := utilities.NewLogger("info")
 	emojis := make([]Emoji, 0)
 	uri := fmt.Sprintf("https://%s.slack.com/api/emoji.adminList", c.team)
 	params := url.Values{}
@@ -44,7 +47,7 @@ func (c *Client) ListEmoji() ([]Emoji, error) {
 	params.Set("token", c.token)
 
 	for {
-		slog.Info("Downloading list", "page", params.Get("page"))
+		logger.Info("Downloading list", "page", params.Get("page"))
 		payload := bytes.NewBufferString(params.Encode())
 		req, err := http.NewRequest(http.MethodPost, uri, payload)
 		if err != nil {
@@ -55,9 +58,6 @@ func (c *Client) ListEmoji() ([]Emoji, error) {
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return []Emoji{}, err
-		}
-		if resp.StatusCode != http.StatusOK {
-			return []Emoji{}, fmt.Errorf("response code error: %d", resp.StatusCode)
 		}
 
 		data := EmojiList{}
@@ -76,7 +76,7 @@ func (c *Client) ListEmoji() ([]Emoji, error) {
 				params.Set("page", fmt.Sprint(data.Paging.Page+1))
 			}
 		} else {
-			return []Emoji{}, fmt.Errorf("bad response: %v", data)
+			return []Emoji{}, fmt.Errorf("unable to list emojis: %s", resp.Header["X-Slack-Failure"])
 		}
 	}
 }

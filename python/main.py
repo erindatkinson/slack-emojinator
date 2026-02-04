@@ -19,10 +19,10 @@ from packages import slack, utils, log, session
 # pylint: enable=import-error
 
 
-def import_emoji(filepath:str):
+def import_emoji(filepath:str, postfix=""):
     """Import all emoji in the given filepath to the connected slack team"""
     client = slack.Slack(session.new_session(), log.get_logger())
-    client.import_emoji(filepath)
+    client.import_emoji(filepath, postfix)
 
 
 def export_emoji(export_dir: str = "./export"):
@@ -90,7 +90,7 @@ def stats():
     tpls.globals['tabulate'] = tabulate
     stats_tpl = tpls.get_template("stats.md.jinja2")
     print(stats_tpl.render(
-        top_25=sorted(userstats.items(), key=lambda x: x[1], reverse=True)[:25],
+        top_25=tabulate(sorted(userstats.items(), key=lambda x: x[1], reverse=True)[:25]),
         pc_99=np.percentile(df, 99),
         pc_90=np.percentile(df, 90),
         pc_75=np.percentile(df, 75),

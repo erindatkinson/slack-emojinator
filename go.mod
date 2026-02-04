@@ -1,8 +1,6 @@
 module github.com/erindatkinson/slack-emojinator
 
-go 1.24.4
-
-toolchain go1.24.11
+go 1.25.5
 
 require (
 	github.com/gammazero/workerpool v1.1.3
