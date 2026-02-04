@@ -76,7 +76,7 @@ func (c *Client) ListEmoji() ([]Emoji, error) {
 				params.Set("page", fmt.Sprint(data.Paging.Page+1))
 			}
 		} else {
-			return []Emoji{}, fmt.Errorf("unable to list emojis: %s", resp.Header["X-Slack-Failure"])
+			return []Emoji{}, fmt.Errorf("response ok: false: %s", resp.Header["X-Slack-Failure"])
 		}
 	}
 }
