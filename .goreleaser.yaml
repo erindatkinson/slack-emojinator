@@ -12,7 +12,7 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      - debian
+      - darwin
       - windows
     goarch:
       - "386"
@@ -43,6 +43,11 @@ changelog:
       - "^test:"
 
 release:
+  github:
+    owner: erindatkinson
+    name: slack-emojinator
+  replace_existing_artifacts: true
+
   footer: >-
 
     ---

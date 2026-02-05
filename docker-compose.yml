@@ -19,7 +19,8 @@ services:
       - ./import/:/opt/emojinator/import:ro
     command:
       - import
-    # env from .env
+    env_file:
+      - .env
 
   export:
     image: erinatkinson/slack-emojinator:latest
@@ -27,4 +28,6 @@ services:
       - ./export/:/opt/emojinator/export:rw
     command:
       - export
-    # env from .env
+    env_file:
+      - .env
+
