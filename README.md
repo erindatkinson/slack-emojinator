@@ -7,19 +7,9 @@ Bulk import and export emoji into Slack
 
 ## Setup and Prerequisites
 
-You'll need Python and `pip` to get started. I recommend using [pipenv](https://docs.pipenv.org/).
-
-Prepare a directory that contains an image for each emoji you want to create. Remember to respect Slack's specifications for valid emoji images: no greater than 128px in width or height, no greater than 64K in image size. The base filename of each image file should be the name of the emoji (the bit you'll type inside `:` to display it).
-
-Clone the project and install its prereqs:
-
-```bash
-git clone https://github.com/erindatkinson/slack-emojinator.git
-cd slack-emojinator
-pipenv install
-```
-
-You'll need to provide your team name (the bit before ".slack.com" in your admin URL) api token and your session cookie (grab them from your browser). Copy `.env.example`, fill them in, and source it.
+1. Download the correct architecture binary for your computer from the [releases](https://github.com/erindatkinson/slack-emojinator/releases) page.
+1. Set the required env vars described in [`.env.example`](.env.example)
+    1. Steps to acquire the info are detailed below
 
 ### To grab your Slack session cookie and api token
 
@@ -36,26 +26,18 @@ export SLACK_CONCURRENCY=1
 export SLACK_RELEASE_CHANNEL=C0123456789
 ```
 
-Now you're ready to go!
+## Importing and Exporting emoji
 
-## Available commands
+The binary should respond to both the `import` and `export` command.
 
-If you want to know all the commands you can run, just run
+### Import
 
-```bash
-make help
-```
+Prepare a directory (`./import` is the default) that contains an image for each emoji you want to create. Remember to respect Slack's specifications for valid emoji images: no greater than 128px in width or height, no greater than 64K in image size. The base filename of each image file should be the name of the emoji (the bit you'll type inside `:` to display it).
 
-```text
- all:                   Sets up pipenv requirements both locally and for docker
- build-docker:          Builds docker image with Pipenv requirements
- docker-export:         Exports emoji from your slack team to the ./export/ directory using docker
- docker-import:         Imports emoji from the ./import/ directory to your slack team using docker
- download:              Exports emoji from your slack team to the ./export/ directory
- help:                  Prints make target help information from comments in makefile.
- lint:                  Runs pylint on the directory
- setup:                 Installs Pipenv requirements locally
- upload:                Imports emoji from the ./import/ directory to your slack team
-```
+Run `./slack-emojinator import`, any files with names that already exist in your slack team will be skipped.
+
+### Export
+
+Run `./slack-emojinator export` and the binary should run through all existing emojis and download any emoji that isn't already in your export directory (`./export` is the default).
 
 💜
