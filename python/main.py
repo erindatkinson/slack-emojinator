@@ -19,10 +19,10 @@ from packages import slack, utils, log, session
 # pylint: enable=import-error
 
 
-def import_emoji(filepath:str):
+def import_emoji(filepath:str, postfix=""):
     """Import all emoji in the given filepath to the connected slack team"""
     client = slack.Slack(session.new_session(), log.get_logger())
-    client.import_emoji(filepath)
+    client.import_emoji(filepath, postfix)
 
 
 def export_emoji(export_dir: str = "./export"):
@@ -36,7 +36,7 @@ def export_emoji(export_dir: str = "./export"):
     )
 
 
-def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14))):
+def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14)), dry:bool=False):
     """Retrieve the emojis uploaded within the span of time and, if within Slack's
     message limits, post formatted list to a slack channel, otherwise, print to
     standard out"""
@@ -64,7 +64,7 @@ def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14
     markdown = rn_tpl.render(ranks=tabulate(ranks), emojis=list_items)
 
     # post to slack or print to local
-    if len(markdown) <= 12_000:
+    if len(markdown) <= 12_000 and not dry:
         resp = client.post_message(header, channel)
         try:
             if resp.status_code == 200:
@@ -74,6 +74,7 @@ def release_notes(end:str='', start:str=str(dt.now() - rdt.relativedelta(days=14
     else:
         logger.warn("message is over slack's posting limit of 12,000 characters",
                     length=len(markdown))
+        print(header)
         print(markdown)
 
 
@@ -89,7 +90,7 @@ def stats():
     tpls.globals['tabulate'] = tabulate
     stats_tpl = tpls.get_template("stats.md.jinja2")
     print(stats_tpl.render(
-        top_25=sorted(userstats.items(), key=lambda x: x[1], reverse=True)[:25],
+        top_25=tabulate(sorted(userstats.items(), key=lambda x: x[1], reverse=True)[:25]),
         pc_99=np.percentile(df, 99),
         pc_90=np.percentile(df, 90),
         pc_75=np.percentile(df, 75),

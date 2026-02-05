@@ -73,7 +73,7 @@ class Slack:
         return result
 
 
-    def import_emoji(self, filepath:str):
+    def import_emoji(self, filepath:str, postfix:str):
         """Run loop for importing all emoji in a filepath"""
         try:
             self.log.info("Retrieving existing emojis")
@@ -87,14 +87,14 @@ class Slack:
 
         for filename in to_upload:
             emoji_name = f"{os.path.splitext(os.path.basename(filename))[0]}"
-            self.log.info(f"Processing {filename}.")
+            self.log.info(f"Processing {filename+postfix}.")
 
             if emoji_name in existing_emojis:
                 self.log.warn(f"Skipping {emoji_name}. Emoji already exists")
                 continue
             else:
                 try:
-                    self.__upload_emoji(emoji_name, filename)
+                    self.__upload_emoji(emoji_name+postfix, filename)
                     self.log.info(f"{filename} upload complete.")
                 except HTTPError as he:
                     self.log.error("Bad response status when uploading", error=he)

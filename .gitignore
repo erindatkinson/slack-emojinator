@@ -68,6 +68,7 @@ target/
 # Ignore databases
 
 *.sqlite3
+*.db
 
 # Ignore default export/import directories
 
