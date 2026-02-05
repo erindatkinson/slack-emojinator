@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
@@ -33,4 +34,14 @@ func CheckEnvs() error {
 	}
 
 	return nil
+}
+
+func PflagToBool(value pflag.Value) bool {
+	if value.String() == "true" {
+		return true
+	} else if value.String() == "false" {
+		return false
+	} else {
+		panic(fmt.Sprintf("invalid boolean value: %v", value))
+	}
 }

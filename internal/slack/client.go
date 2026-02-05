@@ -156,7 +156,7 @@ func (c *Client) ImportEmoji(name, fPath string) error {
 		if err != nil {
 			return err
 		}
-		slog.Info("response", "code", resp.StatusCode, "data", data)
+		slog.Info("response", "code", resp.StatusCode, "data", data, "name", name, "path", fPath)
 		return nil
 	}
 
