@@ -27,7 +27,7 @@ var exportCmd = &cobra.Command{
 		logger := utilities.NewLogger(
 			cmd.Flag("log-level").Value.String(),
 			"team", team, "dir", outputDir)
-
+		logCtx := utilities.ToContext(cmd.Context(), logger)
 		if err := utilities.CheckEnvs(); err != nil {
 			logger.Error(err.Error())
 			return
@@ -42,7 +42,7 @@ var exportCmd = &cobra.Command{
 		logger.Debug("client setup complete")
 
 		logger.Info("retrieving list of current emoji")
-		currentEmoji, err := client.ListEmoji()
+		currentEmoji, err := client.ListEmoji(logCtx)
 		if err != nil {
 			logger.Error("error retrieving current emoji list", "error", err)
 			return
@@ -64,7 +64,7 @@ var exportCmd = &cobra.Command{
 				}
 
 				loopLog.Debug("exporting emoji")
-				if err := client.ExportEmoji(request, outputDir); err != nil {
+				if err := client.ExportEmoji(logCtx, request, outputDir); err != nil {
 					loopLog.Error("error exporting", "error", err)
 				}
 

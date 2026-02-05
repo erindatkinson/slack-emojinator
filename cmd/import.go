@@ -27,6 +27,7 @@ var importCmd = &cobra.Command{
 		logger := utilities.NewLogger(
 			cmd.Flag("log-level").Value.String(),
 			"team", team, "dir", inputDir)
+		logCtx := utilities.ToContext(cmd.Context(), logger)
 		client := slack.NewSlackClient(
 			viper.GetString("team"),
 			viper.GetString("token"),
@@ -38,7 +39,7 @@ var importCmd = &cobra.Command{
 		}
 		logger.Info("found emojis to import", "count", len(files))
 
-		emojis, err := client.ListEmoji()
+		emojis, err := client.ListEmoji(logCtx)
 		if err != nil {
 			logger.Error("error listing emojis", "err", err)
 			return
@@ -64,7 +65,10 @@ var importCmd = &cobra.Command{
 		if !dryRun {
 			for _, file := range filteredFiles {
 				splits := strings.Split(file.Name(), ".")
-				if err := client.ImportEmoji(splits[0], filepath.Join(inputDir, file.Name())); err != nil {
+				if err := client.ImportEmoji(
+					logCtx,
+					splits[0],
+					filepath.Join(inputDir, file.Name())); err != nil {
 					logger.Error("error importing", "error", err)
 					return
 				}

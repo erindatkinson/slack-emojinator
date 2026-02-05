@@ -2,6 +2,7 @@ package slack
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -36,8 +37,8 @@ func (c *Client) PostMessage() {
 
 }
 
-func (c *Client) ListEmoji() ([]Emoji, error) {
-	logger := utilities.NewLogger("info")
+func (c *Client) ListEmoji(ctx context.Context) ([]Emoji, error) {
+	logger := utilities.FromContext(ctx)
 	emojis := make([]Emoji, 0)
 	uri := fmt.Sprintf("https://%s.slack.com/api/emoji.adminList", c.team)
 	params := url.Values{}
@@ -81,7 +82,7 @@ func (c *Client) ListEmoji() ([]Emoji, error) {
 	}
 }
 
-func (c *Client) ExportEmoji(emoji Emoji, dir string) error {
+func (c *Client) ExportEmoji(ctx context.Context, emoji Emoji, dir string) error {
 	name, err := parseFile(emoji.URL)
 	if err != nil {
 		return err
@@ -106,8 +107,9 @@ func (c *Client) ExportEmoji(emoji Emoji, dir string) error {
 	return nil
 }
 
-func (c *Client) ImportEmoji(name, fPath string) error {
-	slog.Info("importing emoji", "name", name)
+func (c *Client) ImportEmoji(ctx context.Context, name, fPath string) error {
+	logger := utilities.FromContext(ctx)
+	logger.Info("importing emoji", "name", name)
 
 	buf := new(bytes.Buffer)
 	writer := multipart.NewWriter(buf)
@@ -156,7 +158,7 @@ func (c *Client) ImportEmoji(name, fPath string) error {
 		if err != nil {
 			return err
 		}
-		slog.Info("response", "code", resp.StatusCode, "data", data, "name", name, "path", fPath)
+		slog.Debug("response", "code", resp.StatusCode, "data", data, "name", name, "path", fPath)
 		return nil
 	}
 
