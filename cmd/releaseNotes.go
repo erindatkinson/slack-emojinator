@@ -10,6 +10,7 @@ import (
 
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
 	"github.com/erindatkinson/slack-emojinator/internal/utilities"
+
 	// "github.com/markkurossi/tabulate"
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
@@ -19,7 +20,7 @@ import (
 )
 
 type Rank struct {
-	Name string
+	Name  string
 	Count int
 }
 
@@ -46,7 +47,16 @@ var releaseNotesCmd = &cobra.Command{
 		}
 
 		durationEmojis := lo.Filter(emojis, func(item slack.Emoji, index int) {
-			if item.Created > releaseNotesWindowStart
+			if item.Created > releaseNotesWindowStart.Unix() {
+				if item.Created < releaseNotesWindowEnd.Unix() {
+					return true
+				}
+			}
+			return false
+		})
+
+		for _, emoji := range durationEmojis {
+			logger.Info("scope", "created", time.Unix(emoji.Created, 0))
 		}
 		// ranks := []Rank{}
 		// tab := tabulate.New(tabulate.ASCII)
@@ -58,12 +68,14 @@ var releaseNotesCmd = &cobra.Command{
 		logger.Info("first", "emoji", emojis[0])
 		ranks := make(map[string]int)
 		for _, emoji := range emojis {
-			
-			if _, ok := ranks[emoji.UserDisplayName] {
 
+			if _, ok := ranks[emoji.UserDisplayName]; ok {
+				ranks[emoji.UserDisplayName] = ranks[emoji.UserDisplayName] + 1
+			} else {
+				ranks[emoji.UserDisplayName] = 1
 			}
 		}
-		// emoji.UserDisplayName
+		logger.Info("ranks", "data", ranks)
 
 		headerTpl, err := gonja.FromString(utilities.MustAssetString("templates/header.md.jinja2"))
 		if err != nil {
