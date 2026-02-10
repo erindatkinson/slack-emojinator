@@ -1,10 +1,21 @@
 package utilities
 
 import (
+	"context"
 	"log/slog"
 	"os"
 	"strings"
 )
+
+type LoggingKey struct{}
+
+func ContextLogger(ctx context.Context) *slog.Logger {
+	return ctx.Value(LoggingKey{}).(*slog.Logger)
+}
+
+func ToContext(parent context.Context, logger *slog.Logger) context.Context {
+	return context.WithValue(parent, LoggingKey{}, logger)
+}
 
 func NewLogger(level string, args ...any) *slog.Logger {
 	var lvl = new(slog.LevelVar)

@@ -15,8 +15,13 @@ var Envs []string = []string{
 	"concurrency",
 }
 
+var OptionalEnvs []string = []string{
+	"release-channel",
+}
+
 func CheckEnvs() error {
 	errors := []string{}
+
 	for _, env := range Envs {
 		if viper.Get(env) == nil {
 			errors = append(
@@ -31,6 +36,18 @@ func CheckEnvs() error {
 
 	if len(errors) != 0 {
 		return fmt.Errorf("envs required: [%s]", strings.Join(errors, ", "))
+	}
+
+	for _, env := range OptionalEnvs {
+		if viper.Get(env) == nil {
+			errors = append(
+				errors,
+				strings.ToUpper(
+					fmt.Sprintf(
+						"%s_%s",
+						viper.GetEnvPrefix(),
+						strings.ReplaceAll(env, "-", "_"))))
+		}
 	}
 
 	return nil

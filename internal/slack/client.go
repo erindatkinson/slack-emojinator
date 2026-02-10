@@ -32,7 +32,38 @@ func NewSlackClient(team, token, cookie string) *Client {
 	}
 }
 
-func (c *Client) PostMessage() {
+func (c *Client) PostMessage(message, channel, threadTs string, verify bool) (map[string]interface{}, error) {
+	uri := "https://slack.com/api/chat.postMessage"
+	params := url.Values{}
+	params.Set("token", c.token)
+	params.Set("channel", channel)
+	params.Set("as_user", "true")
+	params.Set("markdown_text", message+"\n(This was sent via API)")
+
+	if threadTs != "" {
+		params.Set("thread_ts", threadTs)
+	}
+
+	payload := bytes.NewBufferString(params.Encode())
+
+	req, err := http.NewRequest(http.MethodPost, uri, payload)
+	if err != nil {
+		return nil, err
+	}
+	c.setHeaders(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make(map[string]interface{})
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		return nil, err
+	}
+
+	resp.Body.Close()
+	return data, nil
 
 }
 

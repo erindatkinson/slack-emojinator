@@ -4,10 +4,13 @@ go 1.25.5
 
 require (
 	github.com/gammazero/workerpool v1.1.3
+	github.com/markkurossi/tabulate v0.0.0-20251126123558-a08056f6160f
 	github.com/nikolalohinski/gonja/v2 v2.5.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 )
+
+require github.com/bndr/gotabulate v1.1.2 // indirect
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
