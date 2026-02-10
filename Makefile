@@ -8,6 +8,9 @@ snapshot:
 release:
 	goreleaser release --clean
 
+bindata:
+	go-bindata -pkg utilities -o ./internal/utilities/bindata.go templates/*
+
 ## clean:		Removes build/release/action folders
 clean:
 	rm -rf dist/ bin/ import/ export/

@@ -28,7 +28,7 @@ var importCmd = &cobra.Command{
 			cmd.Flag("log-level").Value.String(),
 			"team", team, "dir", inputDir)
 		client := slack.NewSlackClient(
-			viper.GetString("team"),
+			team,
 			viper.GetString("token"),
 			viper.GetString("cookie"))
 
