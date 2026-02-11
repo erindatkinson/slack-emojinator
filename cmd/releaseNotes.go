@@ -5,15 +5,12 @@ package cmd
 
 import (
 	"fmt"
-	"sort"
 	"time"
 
-	"github.com/bndr/gotabulate"
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
+	"github.com/erindatkinson/slack-emojinator/internal/templates"
 	"github.com/erindatkinson/slack-emojinator/internal/utilities"
 
-	"github.com/nikolalohinski/gonja/v2"
-	"github.com/nikolalohinski/gonja/v2/exec"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -57,107 +54,69 @@ var releaseNotesCmd = &cobra.Command{
 			return false
 		})
 
-		header, body, err := renderTemplates(durationEmojis)
+		ranks, err := templates.RenderRanks(durationEmojis)
 		if err != nil {
-			logger.Error("unable to render templates", "error", err)
+			logger.Error("unable to render the rank list", "error", err)
 			return
 		}
 
-		// Slack has 12k message limit
-		if len(body) > 12_000 {
-			fmt.Println("Message over slack limits, posting to standard out instead")
-			fmt.Println("----------------------------------------------------------")
-			fmt.Println(header)
-			fmt.Println(body)
+		emojiMessaes := templates.BuildEmojiLists(durationEmojis)
 
-		} else {
-			resp1, err := client.PostMessage(header, channel, "", false)
-			if err != nil {
-				logger.Error("error posting message header", "error", err)
-				return
-			}
-
-			_, err = client.PostMessage(body, channel, resp1["ts"].(string), false)
-			if err != nil {
-				logger.Error("error posting message body", "error", err)
-				return
-			}
+		// message for start of thread
+		headerTpl, err := templates.LoadTemplate("templates/header.md.jinja2")
+		if err != nil {
+			logger.Error("unable to load header template", "error", err)
+			return
 		}
+		data := map[string]any{
+			"start": releaseNotesWindowStart.Format(time.RFC822),
+			"end":   releaseNotesWindowEnd.Format(time.RFC822),
+		}
+		header, err := templates.RenderWithData(*headerTpl, data)
+		if err != nil {
+			logger.Error("unable to render header template", "error", err)
+			return
+		}
+
+		logger.Info("sending chanel header message")
+		resp, err := client.PostMessage(header, channel, "", false)
+		if err != nil {
+			logger.Error("unable to post message", "error", err)
+			return
+		}
+
+		logger.Info("sending ranks")
+		thread := resp["ts"].(string)
+		if _, err := client.PostMessage(ranks, channel, thread, false); err != nil {
+			logger.Error("unable to post ranks to thread", "error", err)
+			return
+		}
+
+		started := false
+		for i, message := range emojiMessaes {
+			logger.Info("sending page of new emojis", "page", i)
+			var markdown string
+			if !started {
+				markdown = "## New Emojis\n" + message
+				started = true
+			} else {
+				markdown = message
+			}
+
+			resp, err := client.PostMessage(markdown, channel, thread, false)
+			if err != nil {
+				logger.Error("unable to post followup message", "error", err)
+				return
+			}
+
+			if !resp["ok"].(bool) {
+				logger.Info("debug", "page", i, "resp", resp, "len", len(markdown))
+				fmt.Println(markdown)
+			}
+
+		}
+
 	},
-}
-
-func renderTemplates(emojis []slack.Emoji) (string, string, error) {
-	ranks := buildRanks(emojis)
-	tab := gotabulate.Create(ranks)
-	tab.SetHeaders([]string{"Name", "Count"})
-	tab.SetAlign("center")
-	rankString := tab.Render("simple")
-
-	headerTpl, err := gonja.FromString(utilities.MustAssetString("templates/header.md.jinja2"))
-	if err != nil {
-		return "", "", err
-	}
-
-	tpl, err := gonja.FromString(utilities.MustAssetString("templates/release_notes.md.jinja2"))
-	if err != nil {
-		return "", "", err
-	}
-
-	data := exec.EmptyContext()
-	data.Set("start", releaseNotesWindowStart.Format(time.DateOnly))
-	data.Set("end", releaseNotesWindowEnd.Format(time.DateOnly))
-
-	renderHeader, err := headerTpl.ExecuteToString(data)
-	if err != nil {
-		return "", "", err
-	}
-
-	data = exec.EmptyContext()
-	data.Set("emojis", buildEmojiString(emojis))
-	data.Set("ranks", rankString)
-	renderBody, err := tpl.ExecuteToString(data)
-	if err != nil {
-		return "", "", err
-	}
-
-	return renderHeader, renderBody, nil
-}
-
-func buildEmojiString(emojis []slack.Emoji) []string {
-	out := make([]string, 0)
-	for _, emoji := range emojis {
-		out = append(out, fmt.Sprintf("* :%s: | `:%s:`", emoji.Name, emoji.Name))
-	}
-	sort.Slice(out, func(i, j int) bool {
-		return out[i] < out[j]
-	})
-	return out
-}
-
-func buildRanks(emojis []slack.Emoji) [][]interface{} {
-	ranks := make(map[string]*Rank)
-	for _, emoji := range emojis {
-		if _, ok := ranks[emoji.UserDisplayName]; ok {
-			ranks[emoji.UserDisplayName].Count = ranks[emoji.UserDisplayName].Count + 1
-		} else {
-			ranks[emoji.UserDisplayName] = &Rank{
-				Name:  emoji.UserDisplayName,
-				Count: 1,
-			}
-		}
-	}
-
-	var rankArray [][]interface{}
-	for _, rank := range ranks {
-		rankArray = append(rankArray, []interface{}{rank.Name, rank.Count})
-	}
-
-	sort.Slice(rankArray, func(i, j int) bool {
-		first := rankArray[i][1].(int)
-		second := rankArray[j][1].(int)
-		return first > second
-	})
-	return rankArray
 }
 
 func init() {

@@ -9,7 +9,7 @@ release:
 	goreleaser release --clean
 
 bindata:
-	go-bindata -pkg utilities -o ./internal/utilities/bindata.go templates/*
+	go-bindata -pkg templates -o ./internal/templates/bindata.go templates/*
 
 ## clean:		Removes build/release/action folders
 clean:
