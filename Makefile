@@ -2,10 +2,10 @@ IMPORTDIR ?= ./import/
 EXPORTDIR ?= ./export/
 
 ## snapshot:		Builds binaries based on current code
-snapshot:
+snapshot: bindata
 	docker-compose run builder build --snapshot --clean
 
-release:
+release: bindata
 	goreleaser release --clean
 
 bindata:
