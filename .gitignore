@@ -39,6 +39,7 @@ pip-delete-this-directory.txt
 htmlcov/
 .tox/
 .coverage
+cover.out
 .cache
 nosetests.xml
 coverage.xml
@@ -65,15 +66,8 @@ target/
 # Ignore OS specific cruft
 .DS_Store
 
-# Ignore databases
-
-*.sqlite3
-*.db
-
 # Ignore default export/import directories
 
 export/
 import/
 
-# Testing
-test.py

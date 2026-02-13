@@ -9,6 +9,9 @@ import (
 func GetDownloadedEmojiList(directory string) ([]string, error) {
 	emojis := []string{}
 	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, err error) error {
+		if path == directory {
+			return nil
+		}
 		if err != nil {
 			return err
 		}
