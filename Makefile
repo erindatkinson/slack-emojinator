@@ -19,6 +19,13 @@ clean:
 build-docker: snapshot
 	docker-compose build runner
 
+test:
+	go test ./...
+
+coverage:
+	go test --coverprofile .coverage
+	go tool cover -html=.coverage
+
 ## help:			Prints make target help information from comments in makefile.
 help: Makefile
 	@sed -n 's/^##//p' $< | sort

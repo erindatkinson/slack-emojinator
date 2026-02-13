@@ -24,10 +24,6 @@ func RenderWithData(tpl exec.Template, data map[string]any) (string, error) {
 	return tpl.ExecuteToString(ctx)
 }
 
-func Render(tpl exec.Template) (string, error) {
-	return tpl.ExecuteToString(exec.EmptyContext())
-}
-
 /*
 BuildEmojiLists returns an array of strings that are less than 12k long,
 if the whole list is less than 12k there will be only one string for later
