@@ -5,7 +5,7 @@ EXPORTDIR ?= ./export/
 snapshot: bindata
 	docker-compose run builder build --snapshot --clean
 
-release: bindata
+release: 
 	goreleaser release --clean
 
 bindata:
