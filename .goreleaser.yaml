@@ -2,10 +2,9 @@ version: 2
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
-    - go generate ./...
+    # gotta add this to the builder first
+    #- go-bindata -pkg templates -o ./internal/utilities/bindata.go templates/*
 
 builds:
   - env:
@@ -19,6 +18,8 @@ builds:
       - amd64
       - arm64
       - mips
+    ldflags:
+      -s -w -X github.com/erindatkinson/slack-emojinator/cmd.version={{ .Version}}
 
 archives:
   - formats: [tar.gz]
