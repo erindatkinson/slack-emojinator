@@ -3,7 +3,6 @@ package templates
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
@@ -56,15 +55,6 @@ func BuildEmojiLists(emojis []slack.Emoji) []string {
 	batches = append(batches, strings.Clone(batch))
 	return batches
 
-}
-
-type Rank struct {
-	Name  string
-	Count int
-}
-
-func (r Rank) toArray() []string {
-	return []string{r.Name, strconv.Itoa(r.Count)}
 }
 
 func RenderRanks(emojis []slack.Emoji) (string, error) {
