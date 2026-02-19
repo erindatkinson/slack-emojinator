@@ -1,0 +1,8 @@
+{{$ns := .Namespace -}}
+# Emojis
+
+---
+
+{{range .Pages -}}
+* [{{.Name}}](/docs/{{$ns}}/{{.Name}}.md)
+{{end}}
