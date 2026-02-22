@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/erindatkinson/slack-emojinator/internal/cache"
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
 	"github.com/erindatkinson/slack-emojinator/internal/utilities"
 	"github.com/gammazero/workerpool"
@@ -47,7 +48,7 @@ var exportCmd = &cobra.Command{
 			logger.Error("error retrieving current emoji list", "error", err)
 			return
 		}
-		cached, err := utilities.GetDownloadedEmojiList(outputDir)
+		cached, err := cache.GetDownloadedEmojiList(outputDir)
 		if err != nil {
 			logger.Error("unable to get cached emojis", "error", err)
 		}

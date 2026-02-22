@@ -1,86 +1,49 @@
 package templates
 
 import (
-	"fmt"
-	"io/fs"
-	"log/slog"
+	"os"
 	"path"
-	"path/filepath"
-	"slices"
+	"text/template"
+
+	"github.com/erindatkinson/slack-emojinator/internal/cache"
 )
 
-func ParseName(emoji string) {
+func WriteIndex(namespace string, pages []*cache.EmojiPage) error {
+	tpl, err := template.New("index").Parse(MustAssetString("templates/doc_index.md.gotmpl"))
+	if err != nil {
+		return err
+	}
+	doc := Docs{Namespace: namespace, Pages: pages}
 
+	os.MkdirAll(path.Join("docs/", namespace), 0700)
+	fp, err := os.Create(path.Join("docs/", namespace, "index.md"))
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+
+	if err = tpl.Execute(fp, &doc); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func ListEmojiFiles(directory string, namespace string) (emojis []EmojiItem, err error) {
-	emojis = make([]EmojiItem, 0)
-	err = filepath.WalkDir(path.Join(directory, namespace), func(fPath string, d fs.DirEntry, err error) error {
-		if fPath == directory {
-			return nil
-		}
-		if d.Name() == ".DS_Store" {
-			return nil
-		}
-		if d.IsDir() {
-			return nil
-		}
+func WritePages(namespace string, pages []*cache.EmojiPage) error {
+	tpl, err := template.New("docs").Parse(MustAssetString("templates/doc_page.md.gotmpl"))
+	if err != nil {
+		return err
+	}
+	for _, page := range pages {
+		fp, err := os.Create(path.Join("docs/", namespace, page.Name+".md"))
 		if err != nil {
 			return err
 		}
-		if d.Name() == "" {
-			slog.Info("wtf", "path", fPath, "error", err)
-		}
-		emojis = append(emojis, EmojiItem{
-			Name:    d.Name(),
-			DocPath: path.Join("/emojis/", namespace, path.Base(fPath)),
-		})
-		return nil
-	})
+		defer fp.Close()
 
-	slices.SortFunc(emojis, func(a EmojiItem, b EmojiItem) int {
-		if a.Name < b.Name {
-			return -1
-		} else if a.Name > b.Name {
-			return 1
-		} else {
-			return 0
-		}
-	})
-	return
-}
-
-func PaginateEmojiList(list []EmojiItem, namespace string) []*EmojiPage {
-	pages := []*EmojiPage{}
-	count := 0
-	for i := 0; i < len(list); i = i + 100 {
-		char := string(list[i].Name[0])
-		var emojis []EmojiItem
-		if i+100 > len(list) {
-			emojis = list[i : len(list)-1]
-		} else {
-			emojis = list[i : i+100]
-		}
-		name := fmt.Sprintf("page-%s-%06d", char, count)
-		page := EmojiPage{
-			Name:     name,
-			Count:    count,
-			Emojis:   emojis,
-			PrevPage: "",
-			NextPage: "",
-		}
-		pages = append(pages, &page)
-		count++
-	}
-
-	for i, page := range pages {
-		if i > 0 {
-			page.PrevPage = path.Join("/docs/", namespace, pages[i-1].Name+".md")
-		}
-
-		if i < len(pages)-1 {
-			page.NextPage = path.Join("/docs/", namespace, pages[i+1].Name+".md")
+		if err = tpl.Execute(fp, *page); err != nil {
+			return err
 		}
 	}
-	return pages
+	return nil
 }

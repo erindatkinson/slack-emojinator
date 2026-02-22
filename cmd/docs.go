@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"os"
-	"path"
-	"text/template"
-
+	"github.com/erindatkinson/slack-emojinator/internal/cache"
 	"github.com/erindatkinson/slack-emojinator/internal/templates"
 	"github.com/erindatkinson/slack-emojinator/internal/utilities"
 	"github.com/spf13/cobra"
@@ -43,52 +40,22 @@ var docsCmd = &cobra.Command{
 		// outputRoot := cmd.Flag("output-root").Value.String()
 		inputRoot := cmd.Flag("input-root").Value.String()
 
-		logger.Info("getting emoji list")
-		emojis, err := templates.ListEmojiFiles(inputRoot, namespace)
+		emojis, err := cache.ListEmojiFiles(inputRoot, namespace)
 		if err != nil {
 			logger.Error("unable to get emojis", "error", err)
 			return
 		}
 
-		indexTpl, err := template.New("index").Parse(string(templates.MustAsset("templates/doc_index.md.gotmpl")))
-		if err != nil {
-			logger.Error("error loading template", "error", err)
-			return
-		}
-
-		tpl, err := template.New("docs").Parse(string(templates.MustAsset("templates/doc_page.md.gotmpl")))
-		if err != nil {
-			logger.Error("error loading template", "error", err)
-			return
-		}
-
-		logger.Info("paginating emojis")
-		pages := templates.PaginateEmojiList(emojis, namespace)
-		doc := templates.Docs{Namespace: namespace, Pages: pages}
-		os.MkdirAll(path.Join("docs/", namespace), 0700)
-		indexFp, err := os.Create(path.Join("docs/", namespace, "index.md"))
-		if err = indexTpl.Execute(indexFp, &doc); err != nil {
+		pages := cache.PaginateEmojiList(emojis, namespace)
+		if err := templates.WriteIndex(namespace, pages); err != nil {
 			logger.Error("error writing index", "error", err)
-			indexFp.Close()
 			return
 		}
-		indexFp.Close()
 
-		for _, page := range pages {
-			fp, err := os.Create(path.Join("docs/", namespace, page.Name+".md"))
-			if err != nil {
-				logger.Error("couldn't make file", "error", err)
-				return
-			}
-
-			if err = tpl.Execute(fp, *page); err != nil {
-				logger.Error("error writing file", "error", err)
-				fp.Close()
-				return
-			}
-			fp.Close()
+		if err := templates.WritePages(namespace, pages); err != nil {
+			logger.Error("error writing pages", "error", err)
+			return
 		}
-
 	},
 }
 

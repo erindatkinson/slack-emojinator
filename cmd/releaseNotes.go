@@ -5,8 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"strings"
-	"text/template"
 	"time"
 
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
@@ -63,22 +61,11 @@ var releaseNotesCmd = &cobra.Command{
 		emojiMessages := templates.BuildEmojiLists(durationEmojis)
 
 		// message for start of thread
-		headerTpl, err := template.New("header").Parse(templates.MustAssetString("templates/header.md.gotmpl"))
+		header, err := templates.RenderHeader(releaseNotesWindowStart, releaseNotesWindowEnd)
 		if err != nil {
-			logger.Error("unable to load header template", "error", err)
+			logger.Error("unable to render header", "error", err)
 			return
 		}
-		data := map[string]any{
-			"start": releaseNotesWindowStart.Format(time.RFC822),
-			"end":   releaseNotesWindowEnd.Format(time.RFC822),
-		}
-		var headerBuilder strings.Builder
-		if err = headerTpl.Execute(&headerBuilder, data); err != nil {
-			logger.Error("unable to render header template", "error", err)
-			return
-		}
-		header := headerBuilder.String()
-
 		if !releaseNotesDryRun {
 			logger.Info("sending chanel header message")
 			resp, err := client.PostMessage(header, channel, "", false)

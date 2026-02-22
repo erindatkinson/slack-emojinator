@@ -2,7 +2,6 @@ package templates
 
 import (
 	"fmt"
-	"path"
 	"testing"
 
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
@@ -11,47 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/vektra/neko"
 )
-
-func TestLoadTemplate(t *testing.T) {
-	tests := neko.Modern(t)
-
-	tests.It("can load the expected templates", func(t *testing.T) {
-		dir := "templates/"
-		expectedTemplates := []string{
-			"header.md.jinja2",
-			"ranks.md.jinja2",
-			"stats.md.jinja2",
-		}
-
-		for _, tplFile := range expectedTemplates {
-			_, err := LoadTemplate(path.Join(dir, tplFile))
-			assert.Nil(t, err)
-		}
-	})
-
-	tests.Run()
-}
-
-func TestRenderWithData(t *testing.T) {
-	tests := neko.Modern(t)
-
-	tests.It("renders the header correctly", func(t *testing.T) {
-		tpl, err := LoadTemplate("templates/header.md.jinja2")
-		require.Nil(t, err)
-
-		data := map[string]any{
-			"start": "Start",
-			"end":   "End",
-		}
-
-		rendered, err := RenderWithData(*tpl, data)
-		assert.Nil(t, err)
-		assert.Equal(t, "# :sby-a-new-emoji: Emoji Release Notes Start - End", rendered)
-
-	})
-
-	tests.Run()
-}
 
 func TestBuildEmojiLists(t *testing.T) {
 	tests := neko.Modern(t)
