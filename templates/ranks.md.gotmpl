@@ -1,7 +1,8 @@
+{{$ranks := .Ranks -}}
 # :sby-a-new-emoji: Emoji Release Notes
 
 ## Uploaders
 
-{{range .Ranks -}}
-* {{ .Name }}{{.Padding}}{{ .Count }} 
+{{range .Keys -}}
+* {{ . }}{{padding .}}{{index $ranks .}}
 {{end -}}

@@ -5,10 +5,6 @@ type Docs struct {
 	Pages     []*EmojiPage
 }
 
-type RanksData struct {
-	Ranks []Rank
-}
-
 type ReleaseData struct {
 	Start string
 	End   string
@@ -27,8 +23,7 @@ type EmojiItem struct {
 	DocPath string
 }
 
-type Rank struct {
-	Name    string
-	Count   int
-	Padding string
+type RanksData struct {
+	Keys  []string
+	Ranks map[string]int
 }
