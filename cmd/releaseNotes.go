@@ -5,6 +5,8 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
+	"text/template"
 	"time"
 
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
@@ -16,13 +18,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Rank struct {
-	Name  string
-	Count int
-}
-
-var releaseNotesWindowStart time.Time
-var releaseNotesWindowEnd time.Time
+var (
+	releaseNotesWindowStart time.Time
+	releaseNotesWindowEnd   time.Time
+	releaseNotesDryRun      bool
+)
 
 // releaseNotesCmd represents the releaseNotes command
 var releaseNotesCmd = &cobra.Command{
@@ -60,10 +60,10 @@ var releaseNotesCmd = &cobra.Command{
 			return
 		}
 
-		emojiMessaes := templates.BuildEmojiLists(durationEmojis)
+		emojiMessages := templates.BuildEmojiLists(durationEmojis)
 
 		// message for start of thread
-		headerTpl, err := templates.LoadTemplate("templates/header.md.jinja2")
+		headerTpl, err := template.New("header").Parse(templates.MustAssetString("templates/header.md.gotmpl"))
 		if err != nil {
 			logger.Error("unable to load header template", "error", err)
 			return
@@ -72,48 +72,60 @@ var releaseNotesCmd = &cobra.Command{
 			"start": releaseNotesWindowStart.Format(time.RFC822),
 			"end":   releaseNotesWindowEnd.Format(time.RFC822),
 		}
-		header, err := templates.RenderWithData(*headerTpl, data)
-		if err != nil {
+		var headerBuilder strings.Builder
+		if err = headerTpl.Execute(&headerBuilder, data); err != nil {
 			logger.Error("unable to render header template", "error", err)
 			return
 		}
+		header := headerBuilder.String()
 
-		logger.Info("sending chanel header message")
-		resp, err := client.PostMessage(header, channel, "", false)
-		if err != nil {
-			logger.Error("unable to post message", "error", err)
-			return
-		}
-
-		logger.Info("sending ranks")
-		thread := resp["ts"].(string)
-		if _, err := client.PostMessage(ranks, channel, thread, false); err != nil {
-			logger.Error("unable to post ranks to thread", "error", err)
-			return
-		}
-
-		started := false
-		for i, message := range emojiMessaes {
-			logger.Info("sending page of new emojis", "page", i)
-			var markdown string
-			if !started {
-				markdown = "## New Emojis\n" + message
-				started = true
-			} else {
-				markdown = message
-			}
-
-			resp, err := client.PostMessage(markdown, channel, thread, false)
+		if !releaseNotesDryRun {
+			logger.Info("sending chanel header message")
+			resp, err := client.PostMessage(header, channel, "", false)
 			if err != nil {
-				logger.Error("unable to post followup message", "error", err)
+				logger.Error("unable to post message", "error", err)
 				return
 			}
 
-			if !resp["ok"].(bool) {
-				logger.Info("debug", "page", i, "resp", resp, "len", len(markdown))
-				fmt.Println(markdown)
+			logger.Info("sending ranks")
+			thread := resp["ts"].(string)
+			if _, err := client.PostMessage(ranks, channel, thread, false); err != nil {
+				logger.Error("unable to post ranks to thread", "error", err)
+				return
 			}
 
+			started := false
+			for i, message := range emojiMessages {
+				logger.Info("sending page of new emojis", "page", i)
+				var markdown string
+				if !started {
+					markdown = "## New Emojis\n" + message
+					started = true
+				} else {
+					markdown = message
+				}
+
+				resp, err := client.PostMessage(markdown, channel, thread, false)
+				if err != nil {
+					logger.Error("unable to post followup message", "error", err)
+					return
+				}
+
+				if !resp["ok"].(bool) {
+					logger.Info("debug", "page", i, "resp", resp, "len", len(markdown))
+					fmt.Println(markdown)
+				}
+
+			}
+		} else {
+			fmt.Println(header)
+			fmt.Println(ranks)
+			for i, message := range emojiMessages {
+				if i == 0 {
+					fmt.Println("## New Emojis\n") // intentional double \n
+				}
+				fmt.Println(message)
+			}
 		}
 
 	},
@@ -124,4 +136,5 @@ func init() {
 	now := time.Now()
 	releaseNotesCmd.Flags().TimeVar(&releaseNotesWindowStart, "start", now.Add(-14*24*time.Hour), []string{time.RFC822}, "start time")
 	releaseNotesCmd.Flags().TimeVar(&releaseNotesWindowEnd, "end", now, []string{time.RFC822}, "end time")
+	releaseNotesCmd.Flags().BoolVar(&releaseNotesDryRun, "dry-run", false, "don't post if set")
 }

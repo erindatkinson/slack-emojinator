@@ -3,9 +3,7 @@
 // templates/doc_index.md.gotmpl (107B)
 // templates/doc_page.md.gotmpl (508B)
 // templates/header.md.gotmpl (65B)
-// templates/header.md.jinja2 (63B)
-// templates/ranks.md.gotmpl (76B)
-// templates/ranks.md.jinja2 (75B)
+// templates/ranks.md.gotmpl (123B)
 // templates/stats.md.jinja2 (169B)
 
 package templates
@@ -114,7 +112,7 @@ func templatesDoc_pageMdGotmpl() (*asset, error) {
 	return a, nil
 }
 
-var _templatesHeaderMdGotmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x52\x56\xb0\x2a\x4e\xaa\xd4\x4d\xd4\xcd\x4b\x2d\xd7\x4d\xcd\xcd\xcf\xca\xb4\x52\x70\x05\x51\x0a\x41\xa9\x39\xa9\x89\xc5\xa9\x0a\x7e\xf9\x25\xa9\xc5\x0a\xd5\xd5\x0a\x7a\xc1\x25\x89\x45\x25\x0a\xb5\xb5\x0a\xba\x60\xae\x6b\x5e\x8a\x42\x6d\x2d\x20\x00\x00\xff\xff\x66\xfc\x53\x50\x41\x00\x00\x00")
+var _templatesHeaderMdGotmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x52\x56\xb0\x2a\x4e\xaa\xd4\x4d\xd4\xcd\x4b\x2d\xd7\x4d\xcd\xcd\xcf\xca\xb4\x52\x70\x05\x51\x0a\x41\xa9\x39\xa9\x89\xc5\xa9\x0a\x7e\xf9\x25\xa9\xc5\x0a\xd5\xd5\x0a\x7a\xc5\x25\x89\x45\x25\x0a\xb5\xb5\x0a\xba\x60\x6e\x6a\x5e\x8a\x42\x6d\x2d\x20\x00\x00\xff\xff\x88\xdc\x37\xc0\x41\x00\x00\x00")
 
 func templatesHeaderMdGotmplBytes() ([]byte, error) {
 	return bindataRead(
@@ -129,32 +127,12 @@ func templatesHeaderMdGotmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/header.md.gotmpl", size: 65, mode: os.FileMode(0644), modTime: time.Unix(1771459070, 0)}
-	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x3d, 0x16, 0x9d, 0xc2, 0x4e, 0xfd, 0xe3, 0xb9, 0x5d, 0x9c, 0x78, 0x23, 0x99, 0xd7, 0xb3, 0x23, 0x71, 0xb, 0x98, 0xff, 0x69, 0x99, 0xda, 0xcb, 0x74, 0x1c, 0x12, 0x1a, 0x9d, 0x12, 0xe0, 0xe6}}
+	info := bindataFileInfo{name: "templates/header.md.gotmpl", size: 65, mode: os.FileMode(0644), modTime: time.Unix(1771718559, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xa0, 0x78, 0x45, 0x13, 0x18, 0xd2, 0xa3, 0x59, 0x57, 0xfc, 0xff, 0xd0, 0x6a, 0xb4, 0x60, 0xcc, 0xb5, 0x53, 0xdf, 0x3c, 0x29, 0x34, 0x6d, 0xd2, 0xc8, 0xc6, 0x42, 0x76, 0x95, 0x56, 0x7b, 0xe9}}
 	return a, nil
 }
 
-var _templatesHeaderMdJinja2 = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x52\x56\xb0\x2a\x4e\xaa\xd4\x4d\xd4\xcd\x4b\x2d\xd7\x4d\xcd\xcd\xcf\xca\xb4\x52\x70\x05\x51\x0a\x41\xa9\x39\xa9\x89\xc5\xa9\x0a\x7e\xf9\x25\xa9\xc5\x0a\xd5\xd5\x0a\xc5\x25\x89\x45\x25\x0a\xb5\xb5\x0a\xba\x20\x5e\x6a\x5e\x8a\x42\x6d\x2d\x20\x00\x00\xff\xff\x76\xc0\xe2\xbb\x3f\x00\x00\x00")
-
-func templatesHeaderMdJinja2Bytes() ([]byte, error) {
-	return bindataRead(
-		_templatesHeaderMdJinja2,
-		"templates/header.md.jinja2",
-	)
-}
-
-func templatesHeaderMdJinja2() (*asset, error) {
-	bytes, err := templatesHeaderMdJinja2Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "templates/header.md.jinja2", size: 63, mode: os.FileMode(0644), modTime: time.Unix(1770326844, 0)}
-	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x8a, 0x3, 0xf8, 0xfd, 0x98, 0x8d, 0x76, 0x4c, 0xf3, 0xca, 0x62, 0x3, 0x5c, 0x4c, 0xe7, 0xf8, 0x78, 0x69, 0x4d, 0xf7, 0xf0, 0x9c, 0x62, 0x22, 0x67, 0x8c, 0xd, 0xaf, 0xc4, 0xf8, 0xe, 0x69}}
-	return a, nil
-}
-
-var _templatesRanksMdGotmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x52\x56\xb0\x2a\x4e\xaa\xd4\x4d\xd4\xcd\x4b\x2d\xd7\x4d\xcd\xcd\xcf\xca\xb4\x52\x70\x05\x51\x0a\x41\xa9\x39\xa9\x89\xc5\xa9\x0a\x7e\xf9\x25\xa9\xc5\x5c\x5c\xca\xca\x0a\xa1\x05\x39\xf9\x89\x29\xa9\x45\xc5\x5c\x5c\x09\x09\x09\x5c\xd5\xd5\x0a\x7a\x41\x89\x79\xd9\xc5\x0a\xb5\xb5\x60\x01\x40\x00\x00\x00\xff\xff\x91\xeb\xb5\x0d\x4c\x00\x00\x00")
+var _templatesRanksMdGotmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x1c\xcb\x31\x0a\xc2\x40\x10\x85\xe1\x7e\x4e\xf1\x20\x9d\xb0\x7b\x80\xb4\x62\x1b\x24\xe0\x01\x46\xf6\x11\xa2\xc9\xac\x64\x23\x22\xc3\xdc\x5d\x62\xf5\xff\xcd\xd7\xa1\x6f\xf7\x6f\xd2\x64\xfc\x24\xae\xf5\x31\xf7\xb8\x1c\xc1\xc8\x85\xda\x88\xa1\xee\x6c\x22\x5d\x87\xdb\x6b\xa9\x5a\xb8\x35\x11\xf7\x4d\x6d\x22\xf2\xa8\xf6\x6c\x48\x11\x72\x82\x3b\xf2\xa0\x2b\x11\xe1\x9e\xaf\x5a\xca\x6c\xd3\xf1\xc8\xe7\xfa\xb6\x1d\x11\x10\x77\x5a\xf9\x83\x5f\x00\x00\x00\xff\xff\x91\x8a\xb8\x10\x7b\x00\x00\x00")
 
 func templatesRanksMdGotmplBytes() ([]byte, error) {
 	return bindataRead(
@@ -169,28 +147,8 @@ func templatesRanksMdGotmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/ranks.md.gotmpl", size: 76, mode: os.FileMode(0644), modTime: time.Unix(1771459090, 0)}
-	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xce, 0x85, 0x59, 0x60, 0x3a, 0x51, 0x17, 0x84, 0x73, 0x60, 0xc0, 0x17, 0x4b, 0xca, 0x15, 0x9c, 0xee, 0xbd, 0x77, 0x95, 0x57, 0x6a, 0x26, 0xdf, 0xea, 0x93, 0x6d, 0x3e, 0xee, 0xe1, 0xba, 0x76}}
-	return a, nil
-}
-
-var _templatesRanksMdJinja2 = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x52\x56\xb0\x2a\x4e\xaa\xd4\x4d\xd4\xcd\x4b\x2d\xd7\x4d\xcd\xcd\xcf\xca\xb4\x52\x70\x05\x51\x0a\x41\xa9\x39\xa9\x89\xc5\xa9\x0a\x7e\xf9\x25\xa9\xc5\x5c\x5c\xca\xca\x0a\xa1\x05\x39\xf9\x89\x29\xa9\x45\xc5\x5c\x5c\x09\x09\x09\x5c\xd5\xd5\x0a\x45\x89\x79\xd9\xc5\x0a\xb5\xb5\x60\x3e\x20\x00\x00\xff\xff\x9f\xb5\x00\x6e\x4b\x00\x00\x00")
-
-func templatesRanksMdJinja2Bytes() ([]byte, error) {
-	return bindataRead(
-		_templatesRanksMdJinja2,
-		"templates/ranks.md.jinja2",
-	)
-}
-
-func templatesRanksMdJinja2() (*asset, error) {
-	bytes, err := templatesRanksMdJinja2Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "templates/ranks.md.jinja2", size: 75, mode: os.FileMode(0644), modTime: time.Unix(1770834862, 0)}
-	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x65, 0xb6, 0x3, 0xfa, 0xb6, 0x65, 0x6e, 0x1d, 0xa2, 0x17, 0xef, 0xc0, 0x40, 0x91, 0xb, 0xc2, 0xfd, 0xfb, 0x8c, 0x51, 0x32, 0xd5, 0x8, 0x2d, 0x75, 0xf1, 0x8b, 0x85, 0xde, 0x13, 0xbf, 0xf1}}
+	info := bindataFileInfo{name: "templates/ranks.md.gotmpl", size: 123, mode: os.FileMode(0644), modTime: time.Unix(1771719240, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xc4, 0x22, 0x44, 0x39, 0x13, 0xf3, 0x62, 0x93, 0x3b, 0xe3, 0x2c, 0xb2, 0x93, 0xfe, 0x45, 0x30, 0xca, 0x5a, 0x43, 0xba, 0x56, 0x40, 0x8f, 0x84, 0x2d, 0x1, 0x62, 0xe8, 0x8e, 0xc3, 0xba, 0x17}}
 	return a, nil
 }
 
@@ -308,9 +266,7 @@ var _bindata = map[string]func() (*asset, error){
 	"templates/doc_index.md.gotmpl": templatesDoc_indexMdGotmpl,
 	"templates/doc_page.md.gotmpl":  templatesDoc_pageMdGotmpl,
 	"templates/header.md.gotmpl":    templatesHeaderMdGotmpl,
-	"templates/header.md.jinja2":    templatesHeaderMdJinja2,
 	"templates/ranks.md.gotmpl":     templatesRanksMdGotmpl,
-	"templates/ranks.md.jinja2":     templatesRanksMdJinja2,
 	"templates/stats.md.jinja2":     templatesStatsMdJinja2,
 }
 
@@ -364,9 +320,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 		"doc_index.md.gotmpl": {templatesDoc_indexMdGotmpl, map[string]*bintree{}},
 		"doc_page.md.gotmpl":  {templatesDoc_pageMdGotmpl, map[string]*bintree{}},
 		"header.md.gotmpl":    {templatesHeaderMdGotmpl, map[string]*bintree{}},
-		"header.md.jinja2":    {templatesHeaderMdJinja2, map[string]*bintree{}},
 		"ranks.md.gotmpl":     {templatesRanksMdGotmpl, map[string]*bintree{}},
-		"ranks.md.jinja2":     {templatesRanksMdJinja2, map[string]*bintree{}},
 		"stats.md.jinja2":     {templatesStatsMdJinja2, map[string]*bintree{}},
 	}},
 }}

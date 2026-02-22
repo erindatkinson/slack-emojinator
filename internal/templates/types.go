@@ -1,14 +1,12 @@
 package templates
 
-import "strconv"
-
 type Docs struct {
 	Namespace string
 	Pages     []*EmojiPage
 }
 
 type RanksData struct {
-	Ranks string
+	Ranks []Rank
 }
 
 type ReleaseData struct {
@@ -30,10 +28,7 @@ type EmojiItem struct {
 }
 
 type Rank struct {
-	Name  string
-	Count int
-}
-
-func (r Rank) toArray() []string {
-	return []string{r.Name, strconv.Itoa(r.Count)}
+	Name    string
+	Count   int
+	Padding string
 }

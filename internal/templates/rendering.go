@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"text/template"
 
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
 	"github.com/nikolalohinski/gonja/v2"
 	"github.com/nikolalohinski/gonja/v2/exec"
-	"github.com/olekukonko/tablewriter"
 )
 
 func LoadTemplate(path string) (*exec.Template, error) {
@@ -57,16 +57,25 @@ func BuildEmojiLists(emojis []slack.Emoji) []string {
 
 }
 
+func RankValue(val *Rank) Rank {
+	return *val
+}
+
 func RenderRanks(emojis []slack.Emoji) (string, error) {
 
-	tpl, err := LoadTemplate("templates/ranks.md.jinja2")
+	tpl, err := template.New("ranks").Parse(
+		MustAssetString("templates/ranks.md.gotmpl"))
 	if err != nil {
 		return "", err
 	}
 
 	rankMap := make(map[string]*Rank)
 	ranks := make([]*Rank, 0)
+	max := 0
 	for _, emoji := range emojis {
+		if len(emoji.UserDisplayName) > max {
+			max = len(emoji.UserDisplayName)
+		}
 		if _, ok := rankMap[emoji.UserDisplayName]; ok {
 			rankMap[emoji.UserDisplayName].Count = rankMap[emoji.UserDisplayName].Count + 1
 		} else {
@@ -84,15 +93,22 @@ func RenderRanks(emojis []slack.Emoji) (string, error) {
 		second := ranks[j].Count
 		return first > second
 	})
+	renderData := RanksData{
+		Ranks: make([]Rank, 0),
+	}
+	for _, rank := range ranks {
+		var padding string
+		for i := 0; i < max-len(rank.Name)+1; i++ {
+			padding += " "
+		}
+		rank.Padding = padding
+		renderData.Ranks = append(renderData.Ranks, *rank)
+	}
 
 	var builder strings.Builder
-	tab := tablewriter.NewWriter(&builder)
-	tab.Header([]string{"User", "Count"})
-	for _, user := range ranks {
-		tab.Append(user.toArray())
+	if err = tpl.Execute(&builder, renderData); err != nil {
+		return "", err
 	}
-	tab.Render()
 
-	return RenderWithData(*tpl, map[string]any{"ranks": builder.String()})
-
+	return builder.String(), nil
 }

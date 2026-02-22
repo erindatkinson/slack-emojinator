@@ -174,7 +174,9 @@ func (c *Client) ImportEmoji(name, fPath string) error {
 			retry := resp.Header.Get("Retry-After")
 			seconds, err := strconv.Atoi(retry)
 			if err != nil {
-				return err
+				// If working behind a proxy, 429 may be returned with
+				// stripped headers, fallback to 30s if no retry-after
+				seconds = 30
 			}
 			time.Sleep(time.Duration(seconds) * time.Second)
 			continue

@@ -2,6 +2,6 @@
 
 ## Uploaders
 
-```
-{{ .Ranks }}
-```
+{{range .Ranks -}}
+* {{ .Name }}{{.Padding}}{{ .Count }} 
+{{end -}}
