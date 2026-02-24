@@ -3,7 +3,6 @@ package cache
 import (
 	"fmt"
 	"io/fs"
-	"log/slog"
 	"path"
 	"path/filepath"
 	"slices"
@@ -26,7 +25,6 @@ func ListDownloadedEmojis(directory string) (emojis []EmojiItem, err error) {
 			return err
 		}
 		checkedDir := path.Dir(fPath)
-		slog.Info("testing", "checkedDir", checkedDir)
 		docDir := strings.ReplaceAll(checkedDir, "emojis", "docs")
 		if docDir == checkedDir {
 			docDir = "./docs"

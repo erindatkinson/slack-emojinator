@@ -8,12 +8,14 @@ require (
 )
 
 require (
+	github.com/gammazero/workerpool v1.2.1
 	github.com/stretchr/testify v1.11.1
 	github.com/vektra/neko v0.0.0-20170502000624-99acbdf12420
 )
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/gammazero/deque v1.2.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect

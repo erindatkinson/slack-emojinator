@@ -1,6 +1,6 @@
-/*
-Copyright © 2025 Erin Atkinson
-*/
+// /*
+// Copyright © 2025 Erin Atkinson
+// */
 package cmd
 
 import (
@@ -48,7 +48,7 @@ var exportCmd = &cobra.Command{
 			logger.Error("error retrieving current emoji list", "error", err)
 			return
 		}
-		cached, err := cache.GetDownloadedEmojiList(outputDir)
+		cached, err := cache.ListDownloadedEmojis(outputDir)
 		if err != nil {
 			logger.Error("unable to get cached emojis", "error", err)
 		}
@@ -59,7 +59,9 @@ var exportCmd = &cobra.Command{
 			request := emoji
 			wp.Submit(func() {
 				loopLog := logger.With("name", request.Name)
-				if slices.Contains(cached, request.Name) {
+				if slices.ContainsFunc(cached, func(e cache.EmojiItem) bool {
+					return e.Name == request.Name
+				}) {
 					loopLog.Debug("already downloaded, skipping")
 					return
 				}
