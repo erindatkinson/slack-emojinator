@@ -14,8 +14,9 @@ func WriteIndex(namespace string, pages []*cache.EmojiPage) error {
 		return err
 	}
 	doc := Docs{Namespace: namespace, Pages: pages}
-
-	os.MkdirAll(path.Join("docs/", namespace), 0700)
+	docPath := path.Join("docs/", namespace)
+	os.RemoveAll(docPath)
+	os.MkdirAll(docPath, 0700)
 	fp, err := os.Create(path.Join("docs/", namespace, "index.md"))
 	if err != nil {
 		return err

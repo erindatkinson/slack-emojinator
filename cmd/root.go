@@ -8,6 +8,7 @@ import (
 
 	"github.com/erindatkinson/slack-emojinator/internal/utilities"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -24,5 +25,18 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(utilities.InitConfig)
+	cobra.OnInitialize(initConfig)
+}
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	viper.SetEnvPrefix("slack")
+
+	for _, env := range utilities.Envs {
+		viper.BindEnv(env)
+	}
+
+	viper.SetDefault("concurrency", "1")
+	viper.AutomaticEnv() // read in environment variables that match
+
 }

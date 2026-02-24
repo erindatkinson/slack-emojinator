@@ -14,7 +14,7 @@
 | Emoji Name | Image |
 | :-: | :-: |
 {{range .Emojis -}}
-| {{.Name}} | ![{{.Name}}]({{.DocPath}}) |
+| {{.Name}} | ![{{.Name}}](/{{.Dir}}/{{.Filename}}) |
 {{end}}
 ----
 {{block "navigation" .}}{{end}}
