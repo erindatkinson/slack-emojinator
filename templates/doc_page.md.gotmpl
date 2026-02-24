@@ -1,0 +1,21 @@
+{{- define "navigation" }}
+{{ if (and (ne .NextPage "") (ne .PrevPage "")) -}}
+[Previous Page]({{.PrevPage}}) | [Next Page]({{.NextPage}})
+{{ else if (ne .PrevPage "") -}}
+[Previous Page]({{.PrevPage}}) |
+{{ else if (ne .NextPage "") -}}
+| [Next Page]({{.NextPage}})
+{{ end -}}
+{{ end -}}
+# Emojis (Page {{.Count}})
+{{block "navigation" . -}}{{- end}}
+----
+
+| Emoji Name | Image |
+| :-: | :-: |
+{{range .Emojis -}}
+| {{.Name}} | ![{{.Name}}](/{{.Dir}}/{{.Filename}}) |
+{{end}}
+----
+{{block "navigation" .}}{{end}}
+💜

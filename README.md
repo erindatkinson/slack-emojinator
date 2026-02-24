@@ -13,10 +13,11 @@ Bulk import and export emoji into Slack
 
 ### To grab your Slack session cookie and api token
 
-* Open the dev console of your browser and go to the Network tab
+* Navigate to the Custom Emoji Page of your slack team
+* Open the dev console of your browser and go to the Network tab (you may have to refresh)
 * There will be at least 3 calls to /info?, in one of them there will be a payload with a token with custom emoji permissions
 * copy that token, and copy the request "as curl" into a text editor
-* pull the cookie string from the `-b` flag.
+* pull the cookie string from the `-b` flag if Chrome, or the data after `-H "Cookie` if Firefox.
 
 ```sh
 export SLACK_TEAM=example-team-subdomain
