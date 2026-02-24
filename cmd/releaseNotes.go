@@ -109,7 +109,7 @@ var releaseNotesCmd = &cobra.Command{
 			fmt.Println(ranks)
 			for i, message := range emojiMessages {
 				if i == 0 {
-					fmt.Println("## New Emojis\n") // intentional double \n
+					fmt.Printf("## New Emojis\n\n")
 				}
 				fmt.Println(message)
 			}

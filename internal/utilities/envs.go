@@ -19,6 +19,19 @@ var OptionalEnvs []string = []string{
 	"release-channel",
 }
 
+// initConfig reads in config file and ENV variables if set.
+func InitConfig() {
+	viper.SetEnvPrefix("slack")
+
+	for _, env := range Envs {
+		viper.BindEnv(env)
+	}
+
+	viper.SetDefault("concurrency", "1")
+	viper.AutomaticEnv() // read in environment variables that match
+
+}
+
 func CheckEnvs() error {
 	errors := []string{}
 

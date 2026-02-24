@@ -3,16 +3,15 @@ package cache
 import (
 	"fmt"
 	"io/fs"
-	"log/slog"
 	"path"
 	"path/filepath"
 	"slices"
 	"strings"
 )
 
-func ListEmojiFiles(directory string, namespace string) (emojis []EmojiItem, err error) {
+func ListDownloadedEmojis(directory string) (emojis []EmojiItem, err error) {
 	emojis = make([]EmojiItem, 0)
-	err = filepath.WalkDir(path.Join(directory, namespace), func(fPath string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(directory, func(fPath string, d fs.DirEntry, err error) error {
 		if fPath == directory {
 			return nil
 		}
@@ -25,25 +24,26 @@ func ListEmojiFiles(directory string, namespace string) (emojis []EmojiItem, err
 		if err != nil {
 			return err
 		}
-		if d.Name() == "" {
-			slog.Info("wtf", "path", fPath, "error", err)
+		checkedDir := path.Dir(fPath)
+		docDir := strings.ReplaceAll(checkedDir, "emojis", "docs")
+		if docDir == checkedDir {
+			docDir = "./docs"
 		}
-		emojis = append(emojis, EmojiItem{
-			Name:    d.Name(),
-			DocPath: path.Join("/emojis/", namespace, path.Base(fPath)),
-		})
+		emoji := EmojiItem{
+			Name:     strings.Split(d.Name(), ".")[0],
+			Filename: d.Name(),
+			Dir:      checkedDir,
+			DocDir:   docDir,
+		}
+
+		emojis = append(emojis, emoji)
 		return nil
 	})
 
 	slices.SortFunc(emojis, func(a EmojiItem, b EmojiItem) int {
-		if a.Name < b.Name {
-			return -1
-		} else if a.Name > b.Name {
-			return 1
-		} else {
-			return 0
-		}
+		return strings.Compare(a.Name, b.Name)
 	})
+
 	return
 }
 
@@ -80,24 +80,4 @@ func PaginateEmojiList(list []EmojiItem, namespace string) []*EmojiPage {
 		}
 	}
 	return pages
-}
-
-func GetDownloadedEmojiList(directory string) ([]string, error) {
-	emojis := []string{}
-	err := filepath.WalkDir(directory, func(path string, d fs.DirEntry, err error) error {
-		if path == directory {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-		splits := strings.Split(d.Name(), ".")
-		emojis = append(emojis, splits[0])
-		return nil
-	})
-	if err != nil {
-		return []string{}, err
-	}
-
-	return emojis, nil
 }

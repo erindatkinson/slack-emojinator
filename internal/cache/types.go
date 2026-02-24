@@ -1,8 +1,10 @@
 package cache
 
 type EmojiItem struct {
-	Name    string
-	DocPath string
+	Name     string
+	Filename string
+	Dir      string
+	DocDir   string
 }
 
 type EmojiPage struct {
