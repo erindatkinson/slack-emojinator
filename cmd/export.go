@@ -4,6 +4,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"os"
 	"slices"
 	"strconv"
@@ -16,38 +17,71 @@ import (
 	"github.com/spf13/viper"
 )
 
+func EmojisFromFile(jsonPath string) ([]slack.Emoji, error) {
+	jsonBytes, err := os.ReadFile(jsonPath)
+	if err != nil {
+		return []slack.Emoji{}, nil
+	}
+	var jsonEmojis slack.EmojiJsonFile
+	if err = json.Unmarshal(jsonBytes, &jsonEmojis); err != nil {
+		return []slack.Emoji{}, nil
+	}
+
+	currentEmoji := make([]slack.Emoji, 0)
+	for e, url := range jsonEmojis.Emoji {
+		currentEmoji = append(currentEmoji, slack.Emoji{
+			Name: e,
+			URL:  url,
+		})
+	}
+	return currentEmoji, nil
+}
+
+func EmojisFromApi(client *slack.Client) ([]slack.Emoji, error) {
+	currentEmoji, err := client.ListEmoji()
+	if err != nil {
+		return []slack.Emoji{}, err
+	}
+	return currentEmoji, nil
+}
+
 // exportCmd represents the export command
 var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Pull all emoji from a given slack team",
 	Run: func(cmd *cobra.Command, args []string) {
+		var client *slack.Client
+		var currentEmoji []slack.Emoji
+		var err error
 		outputDir := cmd.Flag("directory").Value.String()
 		team := viper.GetString("team")
 		concurrency, _ := strconv.Atoi(cmd.Flag("concurrency").Value.String())
-
 		logger := utilities.NewLogger(
 			cmd.Flag("log-level").Value.String(),
 			"team", team, "dir", outputDir)
 
-		if err := utilities.CheckEnvs(); err != nil {
-			logger.Error(err.Error())
-			return
-		}
-		logger.Info("creating export directory")
-		os.MkdirAll(outputDir, 0755)
-		client := slack.NewSlackClient(
-			team,
-			viper.GetString("token"),
-			viper.GetString("cookie"),
-		)
-		logger.Debug("client setup complete")
+		jsonPath := cmd.Flag("json").Value.String()
+		if jsonPath != "" {
+			if currentEmoji, err = EmojisFromFile(jsonPath); err != nil {
+				logger.Error("unable to load emojis from file", "error", err)
+				return
+			}
+		} else {
+			if err := utilities.CheckEnvs(); err != nil {
+				logger.Error("error getting environment vars", "error", err)
+				return
+			}
+			client = slack.NewSlackClient(
+				team,
+				viper.GetString("token"),
+				viper.GetString("cookie"),
+			)
+			if currentEmoji, err = EmojisFromApi(client); err != nil {
+				logger.Error("unable to load emojis from slack", "error", err)
+			}
 
-		logger.Info("retrieving list of current emoji")
-		currentEmoji, err := client.ListEmoji()
-		if err != nil {
-			logger.Error("error retrieving current emoji list", "error", err)
-			return
 		}
+		os.MkdirAll(outputDir, 0755)
 		cached, err := cache.ListDownloadedEmojis(outputDir)
 		if err != nil {
 			logger.Error("unable to get cached emojis", "error", err)
@@ -81,6 +115,7 @@ var exportCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(exportCmd)
 	exportCmd.Flags().StringP("directory", "d", "./export/", "the directory to use to export")
+	exportCmd.Flags().StringP("json", "j", "", "json file to use instead of the api")
 	exportCmd.Flags().String("log-level", "info", "enable debug logging")
 	exportCmd.Flags().IntP("concurrency", "c", 2, "worker concurrency")
 }

@@ -1,5 +1,10 @@
 package slack
 
+type EmojiJsonFile struct {
+	Ok    bool
+	Emoji map[string]string
+}
+
 type Pagination struct {
 	Count int64 `json:"count"`
 	Page  int64 `json:"page"`
