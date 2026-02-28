@@ -14,62 +14,35 @@ type emojiFile struct {
 
 // docsCmd represents the docs command
 var docsCmd = &cobra.Command{
-	Use:   "docs [-d ./emojis] namespace",
+	Use:   "docs [-d ./emojis]",
 	Short: "Generate the docs for a namespace of emojis",
 	Long: `This command assumes an archive structure like so:
 
-	./emojis/
-	├── namespace1/
-	├── namespace2/
-	├── namespace3/
-	├── namespace4/
-	└── namespace5/
+	./emojis/namespace/
 
 	Running 'slack-emojinator docs namespace1' should build a docs directory like so:
-	./docs/
-	└── namespace1/
-
-	If you need to generate for something outside the local path, running 'slack-emojinator docs -d ../archive/' namespace1
-	you would need the file structure to look like:
-	../
-	├── cwd/
-	│	└── .
-	└── archive/
-		└── namespace1/
-
-	and it should build the docs like so:
-	../
-	├── cwd/
-	│	└── .
-	├── archive/
-	│	└── namespace1/
-	└── docs/
-		└── namespace1/	
+	./docs/namespace/
 
 	`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
-			cmd.Println(cmd.UsageString())
-			return
-		}
+		dir := cmd.Flag("dir").Value.String()
 
-		namespace := args[0]
-		logger := utilities.NewLogger("info", "namespace", namespace)
+		logger := utilities.NewLogger("info")
 		// outputRoot := cmd.Flag("output-root").Value.String()
 
-		emojis, err := cache.ListDownloadedEmojis(cmd.Flag("dir").Value.String())
+		emojis, err := cache.ListDownloadedEmojis(dir)
 		if err != nil {
 			logger.Error("unable to get emojis", "error", err)
 			return
 		}
 
-		pages := cache.PaginateEmojiList(emojis, namespace)
-		if err := templates.WriteIndex(namespace, pages); err != nil {
+		pages := cache.PaginateEmojiList(emojis)
+		if err := templates.WriteIndex(emojis[0].DocDir, pages); err != nil {
 			logger.Error("error writing index", "error", err)
 			return
 		}
 
-		if err := templates.WritePages(namespace, pages); err != nil {
+		if err := templates.WritePages(emojis[0].DocDir, pages); err != nil {
 			logger.Error("error writing pages", "error", err)
 			return
 		}

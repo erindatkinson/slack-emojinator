@@ -8,16 +8,16 @@ import (
 	"github.com/erindatkinson/slack-emojinator/internal/cache"
 )
 
-func WriteIndex(namespace string, pages []*cache.EmojiPage) error {
+func WriteIndex(directory string, pages []*cache.EmojiPage) error {
 	tpl, err := template.New("index").Parse(MustAssetString("templates/doc_index.md.gotmpl"))
 	if err != nil {
 		return err
 	}
-	doc := Docs{Namespace: namespace, Pages: pages}
-	docPath := path.Join("docs/", namespace)
+	doc := Docs{Namespace: path.Base(directory), Pages: pages}
+	docPath := directory
 	os.RemoveAll(docPath)
 	os.MkdirAll(docPath, 0700)
-	fp, err := os.Create(path.Join("docs/", namespace, "index.md"))
+	fp, err := os.Create(path.Join(docPath, "index.md"))
 	if err != nil {
 		return err
 	}
@@ -30,13 +30,13 @@ func WriteIndex(namespace string, pages []*cache.EmojiPage) error {
 	return nil
 }
 
-func WritePages(namespace string, pages []*cache.EmojiPage) error {
+func WritePages(directory string, pages []*cache.EmojiPage) error {
 	tpl, err := template.New("docs").Parse(MustAssetString("templates/doc_page.md.gotmpl"))
 	if err != nil {
 		return err
 	}
 	for _, page := range pages {
-		fp, err := os.Create(path.Join("docs/", namespace, page.Name+".md"))
+		fp, err := os.Create(path.Join(directory, page.Name+".md"))
 		if err != nil {
 			return err
 		}

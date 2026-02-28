@@ -47,7 +47,7 @@ func ListDownloadedEmojis(directory string) (emojis []EmojiItem, err error) {
 	return
 }
 
-func PaginateEmojiList(list []EmojiItem, namespace string) []*EmojiPage {
+func PaginateEmojiList(list []EmojiItem) []*EmojiPage {
 	pages := []*EmojiPage{}
 	count := 0
 	for i := 0; i < len(list); i = i + 100 {
@@ -72,11 +72,11 @@ func PaginateEmojiList(list []EmojiItem, namespace string) []*EmojiPage {
 
 	for i, page := range pages {
 		if i > 0 {
-			page.PrevPage = path.Join("/docs/", namespace, pages[i-1].Name+".md")
+			page.PrevPage = path.Join("/docs/", pages[i-1].Name+".md")
 		}
 
 		if i < len(pages)-1 {
-			page.NextPage = path.Join("/docs/", namespace, pages[i+1].Name+".md")
+			page.NextPage = path.Join("/docs/", pages[i+1].Name+".md")
 		}
 	}
 	return pages
