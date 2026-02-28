@@ -3,8 +3,6 @@ version: 2
 before:
   hooks:
     - go mod tidy
-    # gotta add this to the builder first
-    #- go-bindata -pkg templates -o ./internal/utilities/bindata.go templates/*
 
 builds:
   - env:

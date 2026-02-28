@@ -1,7 +1,0 @@
-FROM alpine:3
-# just doing arm for now
-RUN mkdir -p /opt/emojinator/bin
-WORKDIR /opt/emojinator
-COPY ./dist/ dist/
-RUN ln -s /opt/emojinator/dist/slack-emojinator_linux_amd64_v1/slack-emojinator /usr/local/bin/slack-emojinator
-ENTRYPOINT [ "slack-emojinator" ]
