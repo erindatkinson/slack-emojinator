@@ -86,7 +86,7 @@ var releaseNotesCmd = &cobra.Command{
 				logger.Info("sending page of new emojis", "page", i)
 				var markdown string
 				if !started {
-					markdown = "## New Emojis\n" + message
+					markdown = "### New Emojis\n" + message
 					started = true
 				} else {
 					markdown = message
@@ -109,7 +109,7 @@ var releaseNotesCmd = &cobra.Command{
 			fmt.Println(ranks)
 			for i, message := range emojiMessages {
 				if i == 0 {
-					fmt.Printf("## New Emojis\n\n")
+					fmt.Printf("### New Emojis\n\n")
 				}
 				fmt.Println(message)
 			}
