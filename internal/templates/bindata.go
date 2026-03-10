@@ -2,7 +2,7 @@
 // sources:
 // templates/doc_index.md.gotmpl (107B)
 // templates/doc_page.md.gotmpl (519B)
-// templates/header.md.gotmpl (65B)
+// templates/header.md.gotmpl (66B)
 // templates/ranks.md.gotmpl (157B)
 
 package templates
@@ -111,7 +111,7 @@ func templatesDoc_pageMdGotmpl() (*asset, error) {
 	return a, nil
 }
 
-var _templatesHeaderMdGotmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x52\x56\x56\xb0\x2a\x4e\xaa\xd4\x4d\xd4\xcd\x4b\x2d\xd7\x4d\xcd\xcd\xcf\xca\xb4\x52\x70\x05\x51\x0a\x41\xa9\x39\xa9\x89\xc5\xa9\x0a\x7e\xf9\x25\xa9\xc5\x0a\xd5\xd5\x0a\x7a\xc5\x25\x89\x45\x25\x0a\xb5\xb5\x0a\xba\x60\x6e\x6a\x5e\x8a\x42\x2d\x20\x00\x00\xff\xff\x54\x36\xe5\x77\x41\x00\x00\x00")
+var _templatesHeaderMdGotmpl = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x52\x56\x56\xb0\x2a\x4e\xaa\xd4\x4d\xd4\xcd\x4b\x2d\xd7\x4d\xcd\xcd\xcf\xca\xb4\x52\x70\x05\x51\x0a\x41\xa9\x39\xa9\x89\xc5\xa9\x0a\x7e\xf9\x25\xa9\xc5\x0a\xd5\xd5\x0a\x7a\xc5\x25\x89\x45\x25\x0a\xb5\xb5\x0a\xba\x60\x6e\x6a\x5e\x8a\x42\x6d\x2d\x20\x00\x00\xff\xff\xd7\x92\xc7\x90\x42\x00\x00\x00")
 
 func templatesHeaderMdGotmplBytes() ([]byte, error) {
 	return bindataRead(
@@ -126,8 +126,8 @@ func templatesHeaderMdGotmpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "templates/header.md.gotmpl", size: 65, mode: os.FileMode(0644), modTime: time.Unix(1771972135, 0)}
-	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0x1e, 0x9f, 0xd3, 0x55, 0xc0, 0x9f, 0x9c, 0x5c, 0x78, 0xb2, 0xd0, 0x96, 0x12, 0xae, 0x94, 0x33, 0xa8, 0xce, 0xe9, 0x80, 0xf1, 0xf9, 0x59, 0x88, 0x5e, 0xdf, 0xff, 0x2d, 0x77, 0x1d, 0x52, 0x1b}}
+	info := bindataFileInfo{name: "templates/header.md.gotmpl", size: 66, mode: os.FileMode(0644), modTime: time.Unix(1771972135, 0)}
+	a := &asset{bytes: bytes, info: info, digest: [32]uint8{0xa4, 0xff, 0xfd, 0x60, 0x93, 0x9, 0x53, 0x92, 0xfd, 0xd4, 0x2b, 0x1b, 0xaa, 0xfd, 0x1e, 0xaa, 0x3c, 0x10, 0x87, 0xfa, 0xcd, 0x1d, 0xe5, 0x21, 0x8c, 0xf3, 0xeb, 0x75, 0xcf, 0xac, 0x74, 0xd9}}
 	return a, nil
 }
 
