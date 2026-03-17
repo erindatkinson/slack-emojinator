@@ -8,24 +8,19 @@ Bulk import and export emoji into Slack
 ## Setup and Prerequisites
 
 1. Download the correct architecture binary for your computer from the [releases](https://github.com/erindatkinson/slack-emojinator/releases) page.
-1. Set the required env vars described in [`.env.example`](.env.example)
-    1. Steps to acquire the info are detailed below
-
-### To grab your Slack session cookie and api token
-
-* Navigate to the Custom Emoji Page of your slack team
-* Open the dev console of your browser and go to the Network tab (you may have to refresh)
-* There will be at least 3 calls to /info?, in one of them there will be a payload with a token with custom emoji permissions
-* copy that token, and copy the request "as curl" into a text editor
-* pull the cookie string from the `-b` flag if Chrome, or the data after `-H "Cookie` if Firefox.
-
-```sh
-export SLACK_TEAM=example-team-subdomain
-export SLACK_COOKIE='b=<data>; shown_ssb_redirect_page=1; ...; PageCount=99'
-export SLACK_TOKEN=xoxc-<numbers>
-export SLACK_CONCURRENCY=1
-export SLACK_RELEASE_CHANNEL=C0123456789
-```
+1. Copy the [.config.yaml.example](.config.yaml.example) to `./.config.yaml` or `$HOME/.emojinator/.config.yaml`
+    1. Log into your slack team in your browser if you haven't recently
+    1. Configure the yaml appropriately `browser: (chrome, firefox, etc)`
+        1. For the profile:
+            1. in firefox, `about:profiles` should show you the name, but it's usually `default-release`
+            1. in chrome, the `manage profile` page should show a Name field, copy from that and it should be correct.
+        1. for the channel, in the slack channel details page is the Channel ID (in the form of `CXXXXXXXXXXX`)
+        1. for the subdomain, use the subdomain of your slack team.
+    1. if you don't want to store these on your filesystem, you can also put them under the following env vars, or as command line flags:
+        1. SLACK_SUBDOMAIN
+        1. SLACK_BROWSER
+        1. SLACK_PROFILE
+        1. SLACK_CHANNEL
 
 ## Importing and Exporting emoji
 
