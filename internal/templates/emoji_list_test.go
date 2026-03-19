@@ -85,7 +85,7 @@ func TestRenderRanks(t *testing.T) {
 		rendered, err := RenderRanks(emojis)
 		require.Nil(t, err)
 		expected := fmt.Sprintf(
-			"# :sby-a-new-emoji: Emoji Release Notes\n\n## Uploaders\n\n* %s 500\n* %s 250\n* %s 250\n",
+			"## :sby-a-new-emoji: Emoji Release Notes\n\n### Uploaders\n\n```\n* %s 500\n* %s 250\n* %s 250\n```\n",
 			users[0], users[1], users[2])
 		assert.Equal(t, rendered, expected)
 

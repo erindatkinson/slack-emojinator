@@ -69,6 +69,8 @@ target/
 
 # Ignore default export/import directories
 
+emojis/
 export/
 import/
+docs/
 

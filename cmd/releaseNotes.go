@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/erindatkinson/slack-emojinator/internal/slack"
@@ -28,13 +27,13 @@ var releaseNotesCmd = &cobra.Command{
 	Short: "Generate and publish release notes",
 
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := utilities.ContextLogger(cmd.Context())
 		if browser == "" || profile == "" || subdomain == "" {
-			slog.Error("error reading configs from env, config, or flags")
+			logger.Error("error reading configs from env, config, or flags")
 			return
 		}
-		logger := utilities.NewLogger("info", "team", subdomain)
-		client, err := slack.NewSlackClient(cmd.Context(), browser, profile, subdomain)
 
+		client, err := slack.NewSlackClient(cmd.Context(), browser, profile, subdomain)
 		emojis, err := client.ListEmoji()
 		if err != nil {
 			logger.Error("unable to retrieve emoji list")
@@ -71,10 +70,19 @@ var releaseNotesCmd = &cobra.Command{
 				logger.Error("unable to post message", "error", err)
 				return
 			}
+			if errStr, ok := resp["error"]; ok {
+				logger.Error("error posting message", "error", errStr)
+				return
+			}
+
+			var thread string = ""
+			if ts, ok := resp["ts"]; ok {
+				thread = ts.(string)
+			}
 
 			logger.Info("sending ranks")
-			thread := resp["ts"].(string)
-			if _, err := client.PostMessage(channel, ranks, &thread); err != nil {
+			_, err = client.PostMessage(channel, ranks, &thread)
+			if err != nil {
 				logger.Error("unable to post ranks to thread", "error", err)
 				return
 			}
@@ -90,12 +98,11 @@ var releaseNotesCmd = &cobra.Command{
 					markdown = message
 				}
 
-				_, err := client.PostMessage(channel, markdown, &thread)
+				_, err = client.PostMessage(channel, markdown, &thread)
 				if err != nil {
 					logger.Error("unable to post followup message", "error", err)
 					return
 				}
-
 			}
 		} else {
 			fmt.Println(header)
@@ -112,11 +119,13 @@ var releaseNotesCmd = &cobra.Command{
 }
 
 func init() {
-	initConfig()
 	rootCmd.AddCommand(releaseNotesCmd)
-	releaseNotesCmd.Flags().StringVarP(&channel, "channel", "c", utilities.ConfigOrEnv("slack", "channel"), "channel to post to")
 	now := time.Now()
 	releaseNotesCmd.Flags().TimeVar(&releaseNotesWindowStart, "start", now.Add(-14*24*time.Hour), []string{time.RFC822}, "start time")
 	releaseNotesCmd.Flags().TimeVar(&releaseNotesWindowEnd, "end", now, []string{time.RFC822}, "end time")
 	releaseNotesCmd.Flags().BoolVar(&releaseNotesDryRun, "dry-run", false, "don't post if set")
+
+	// channel flag is set in /cmd/root.go so that it can have the initConfig() call, don't re-add it here.
+	// releaseNotesCmd.Flags().StringVarP(&channel, "channel", "c", utilities.ConfigOrEnv("slack", "channel"), "channel to post to")
+
 }

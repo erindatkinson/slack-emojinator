@@ -4,8 +4,8 @@
 package cmd
 
 import (
-	"log/slog"
 	"os"
+	"path"
 	"slices"
 
 	"github.com/erindatkinson/slack-emojinator/internal/cache"
@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var outputDir string
 var concurrency int
 
 // exportCmd represents the export command
@@ -23,38 +22,37 @@ var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Pull all emoji from a given slack team",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := utilities.ContextLogger(cmd.Context())
 		if browser == "" || profile == "" || subdomain == "" {
-			slog.Error("error reading configs from env, config, or flags")
+			logger.Error("error reading configs from env, config, or flags")
 			return
 		}
 
-		logger := utilities.NewLogger(
-			cmd.Flag("log-level").Value.String(),
-			"team", subdomain, "dir", outputDir)
-
 		logger.Info("creating export directory")
-		os.MkdirAll(outputDir, 0755)
+		exportDir := path.Join(directory, subdomain)
+		os.MkdirAll(exportDir, 0755)
+
 		client, err := slack.NewSlackClient(cmd.Context(), browser, profile, subdomain)
 		if err != nil {
 			logger.Error("unable to create slack client", "error", err)
 			return
 		}
 		logger.Debug("client setup complete")
-
 		logger.Info("retrieving list of current emoji")
 		currentEmoji, err := client.ListEmoji()
 		if err != nil {
 			logger.Error("error retrieving current emoji list", "error", err)
 			return
 		}
-		cached, err := cache.ListDownloadedEmojis(outputDir)
+		logger.Info("listing downloaded emojis from filesystem")
+		cached, err := cache.ListDownloadedEmojis(exportDir)
 		if err != nil {
 			logger.Error("unable to get cached emojis", "error", err)
 			return
 		}
 
+		logger.Info("exporting emojis")
 		wp := workerpool.New(concurrency)
-
 		for _, emoji := range currentEmoji {
 			request := emoji
 			wp.Submit(func() {
@@ -67,7 +65,7 @@ var exportCmd = &cobra.Command{
 				}
 
 				loopLog.Debug("exporting emoji")
-				if err := client.ExportEmoji(request, outputDir); err != nil {
+				if err := client.ExportEmoji(request, exportDir); err != nil {
 					loopLog.Error("error exporting", "error", err)
 				}
 
@@ -80,7 +78,5 @@ var exportCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(exportCmd)
-	exportCmd.Flags().StringVarP(&outputDir, "directory", "d", "./export/", "the directory to use to export")
 	exportCmd.Flags().IntVar(&concurrency, "concurrency", 1, "concurrency to use to download")
-	exportCmd.Flags().String("log-level", "info", "enable debug logging")
 }

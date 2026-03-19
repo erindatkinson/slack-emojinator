@@ -6,6 +6,7 @@ package cmd
 import (
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var importDir string
 var importDryRun bool
 
 // importCmd represents the import command
@@ -23,23 +23,22 @@ var importCmd = &cobra.Command{
 	Use:   "import",
 	Short: "Add a collection of emoji to a given slack team",
 	Run: func(cmd *cobra.Command, args []string) {
+		logger := utilities.ContextLogger(cmd.Context())
 		if browser == "" || profile == "" || subdomain == "" {
 			slog.Error("error reading configs from env, config, or flags")
 			return
 		}
 
-		logger := utilities.NewLogger(
-			cmd.Flag("log-level").Value.String(),
-			"team", subdomain, "dir", importDir)
+		importDir := path.Join(directory, subdomain)
 		client, err := slack.NewSlackClient(cmd.Context(), browser, profile, subdomain)
 		if err != nil {
-			logger.Error("error creating slack client")
+			logger.Error("error creating slack client", "error", err)
 			return
 		}
 
 		files, err := os.ReadDir(importDir)
 		if err != nil {
-			logger.Error("error reading files")
+			logger.Error("error reading files", "error", err)
 			return
 		}
 		logger.Info("found emojis to import", "count", len(files))
@@ -83,7 +82,5 @@ var importCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(importCmd)
-	importCmd.Flags().StringVarP(&importDir, "directory", "d", "./import/", "the directory to import from")
-	importCmd.Flags().String("log-level", "info", "enable debug logging")
 	importCmd.Flags().BoolVar(&importDryRun, "dry-run", false, "do a dry run")
 }

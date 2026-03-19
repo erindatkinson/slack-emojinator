@@ -32,10 +32,14 @@ type Client struct {
 	XOXD      string
 	XOXC      string
 	Subdomain string
+	Logger    *slog.Logger
 }
 
 func NewSlackClient(ctx context.Context, browser, profile, subdomain string) (*Client, error) {
-	client := &Client{Subdomain: subdomain}
+	client := &Client{
+		Subdomain: subdomain,
+		Logger:    utilities.ContextLogger(ctx),
+	}
 	if err := client.setXOXDFromCookie(ctx, browser, profile); err != nil {
 		return nil, err
 	}
@@ -75,12 +79,11 @@ func (c *Client) PostMessage(channel, message string, threadTs *string) (map[str
 }
 
 func (c *Client) ListEmoji() ([]Emoji, error) {
-	logger := utilities.NewLogger("info")
 	emojis := make([]Emoji, 0)
 
 	page := 1
 	for {
-		logger.Info("Downloading list", "page", page)
+		c.Logger.Debug("Downloading list", "page", page)
 		req, err := c.buildListRequest(page)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -134,7 +137,7 @@ func (c *Client) ExportEmoji(emoji Emoji, dir string) error {
 }
 
 func (c *Client) ImportEmoji(name, fPath string) error {
-	slog.Info("importing emoji", "name", name)
+	c.Logger.Debug("importing emoji", "name", name)
 	req, err := c.buildImportRequest(name, fPath)
 	if err != nil {
 		return err
@@ -164,7 +167,7 @@ func (c *Client) ImportEmoji(name, fPath string) error {
 		if err != nil {
 			return err
 		}
-		slog.Info("response", "code", resp.StatusCode, "data", data, "name", name, "path", fPath)
+		c.Logger.Debug("response", "code", resp.StatusCode, "data", data, "name", name, "path", fPath)
 		return nil
 	}
 
@@ -175,7 +178,7 @@ func (c *Client) ImportEmoji(name, fPath string) error {
 
 // GetXOXDFromCookie gets the long running token from your cookie store
 func (c *Client) setXOXDFromCookie(ctx context.Context, browser, profile string) error {
-	slog.Info("getting cookies")
+	c.Logger.Info("getting cookies from browser", "browser", browser, "profile", profile)
 	stores := kooky.FindAllCookieStores(ctx)
 	site, _ := url.Parse(fmt.Sprintf("https://%s.slack.com", c.Subdomain))
 	for _, store := range stores {
@@ -194,7 +197,7 @@ func (c *Client) setXOXDFromCookie(ctx context.Context, browser, profile string)
 
 // GetXOXCToken requests a new xoxc token from slack given your xoxd token
 func (c *Client) setXOXCToken() error {
-	slog.Info("getting xoxc token")
+	c.Logger.Debug("getting xoxc token")
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://%s.slack.com", c.Subdomain), nil)
 	if err != nil {
 		return errors.Join(fmt.Errorf("error building request"), err)

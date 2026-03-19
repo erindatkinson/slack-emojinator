@@ -13,7 +13,7 @@ Bulk import and export emoji into Slack
     1. Configure the yaml appropriately `browser: (chrome, firefox, etc)`
         1. For the profile:
             1. in firefox, `about:profiles` should show you the name, but it's usually `default-release`
-            1. in chrome, the `manage profile` page should show a Name field, copy from that and it should be correct.
+            1. in chrome, the `Customize Profile` or `Edit` profile page should show a "Name your Chrome profile" field, copy from that and it should be correct, it may be different from what's shown in the popout.
         1. for the channel, in the slack channel details page is the Channel ID (in the form of `CXXXXXXXXXXX`)
         1. for the subdomain, use the subdomain of your slack team.
     1. if you don't want to store these on your filesystem, you can also put them under the following env vars, or as command line flags:
@@ -22,18 +22,42 @@ Bulk import and export emoji into Slack
         1. SLACK_PROFILE
         1. SLACK_CHANNEL
 
+### Listing available profile/browser combinations
+
+Running `./slack-emojinator list-profiles` with a subdomain configured either in config.yaml, or with the `-s` flag will output something like the following:
+
+```shell
+╭─────────┬─────────────────╮
+│ BROWSER │ PROFILE         │
+├─────────┼─────────────────┤
+│ chrome  │ Your Name       │
+│ firefox │ default-release │
+╰─────────┴─────────────────╯
+```
+
+where each row is a browser/profile combination that has a cookie stored for that subdomain.
+
 ## Importing and Exporting emoji
 
 The binary should respond to both the `import` and `export` command.
 
 ### Import
 
-Prepare a directory (`./import` is the default) that contains an image for each emoji you want to create. Remember to respect Slack's specifications for valid emoji images: no greater than 128px in width or height, no greater than 64K in image size. The base filename of each image file should be the name of the emoji (the bit you'll type inside `:` to display it).
+Prepare a directory (`./emojis/<subdomain>` is the default) that contains an image for each emoji you want to create. Remember to respect Slack's specifications for valid emoji images: no greater than 128px in width or height, no greater than 64K in image size. The base filename of each image file should be the name of the emoji (the bit you'll type inside `:` to display it).
 
 Run `./slack-emojinator import`, any files with names that already exist in your slack team will be skipped.
 
 ### Export
 
-Run `./slack-emojinator export` and the binary should run through all existing emojis and download any emoji that isn't already in your export directory (`./export` is the default).
+Run `./slack-emojinator export` and the binary should run through all existing emojis and download any emoji that isn't already in your export directory (`./emojis/<subdomain>` is the default).
+
+## Generating Docs Markdown
+
+Run `./slack-emojinator docs` and the binary should generate an index file and pages of 100 emojis.
+The emojis will be generated based off of `./emojis/<subdomain>` by default and be populated in `./docs/<subdomain>` by default.
+
+## Posting "Emoji Release Notes" for a Slack team
+
+Running `./slack-emojinator release-notes` will post a ranking of emoji uploaders, and a sorted list of new emojis to the configured .slack.channel option in the .config.yaml
 
 💜

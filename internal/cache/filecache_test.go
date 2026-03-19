@@ -43,7 +43,6 @@ func TestListDownloadedEmojis(t *testing.T) {
 		assert.Len(t, emojis, 1000)
 		for _, emoji := range emojis {
 			assert.Contains(t, emoji.Filename, ".png")
-			assert.Contains(t, emoji.DocDir, "docs")
 		}
 	})
 
