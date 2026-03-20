@@ -19,7 +19,7 @@ import (
 
 	"github.com/browserutils/kooky"
 	_ "github.com/browserutils/kooky/browser/all"
-	"github.com/erindatkinson/slack-emojinator/internal/utilities"
+	"github.com/erindatkinson/emoji-archiver/internal/utilities"
 )
 
 const (

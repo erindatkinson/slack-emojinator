@@ -1,4 +1,4 @@
-# Slack Emojinator
+# Emoji Archiver
 
 ![image of heart eyes smiley emoji as a pillow in a field of grass](.github/assets/emoji-4869395_1280.jpg)
 Image by [David Bawm](https://pixabay.com/users/david_miram-11502595)
@@ -7,7 +7,7 @@ Bulk import and export emoji into Slack
 
 ## Setup and Prerequisites
 
-1. Download the correct architecture binary for your computer from the [releases](https://github.com/erindatkinson/slack-emojinator/releases) page.
+1. Download the correct architecture binary for your computer from the [releases](https://github.com/erindatkinson/emoji-archiver/releases) page.
 1. Copy the [.config.yaml.example](.config.yaml.example) to `./.config.yaml` or `$HOME/.emojinator/.config.yaml`
     1. Log into your slack team in your browser if you haven't recently
     1. Configure the yaml appropriately `browser: (chrome, firefox, etc)`
@@ -24,7 +24,7 @@ Bulk import and export emoji into Slack
 
 ### Listing available profile/browser combinations
 
-Running `./slack-emojinator list-profiles` with a subdomain configured either in config.yaml, or with the `-s` flag will output something like the following:
+Running `./emoji-archiver list-profiles` with a subdomain configured either in config.yaml, or with the `-s` flag will output something like the following:
 
 ```shell
 ╭─────────┬─────────────────╮
@@ -45,19 +45,19 @@ The binary should respond to both the `import` and `export` command.
 
 Prepare a directory (`./emojis/<subdomain>` is the default) that contains an image for each emoji you want to create. Remember to respect Slack's specifications for valid emoji images: no greater than 128px in width or height, no greater than 64K in image size. The base filename of each image file should be the name of the emoji (the bit you'll type inside `:` to display it).
 
-Run `./slack-emojinator import`, any files with names that already exist in your slack team will be skipped.
+Run `./emoji-archiver import`, any files with names that already exist in your slack team will be skipped.
 
 ### Export
 
-Run `./slack-emojinator export` and the binary should run through all existing emojis and download any emoji that isn't already in your export directory (`./emojis/<subdomain>` is the default).
+Run `./emoji-archiver export` and the binary should run through all existing emojis and download any emoji that isn't already in your export directory (`./emojis/<subdomain>` is the default).
 
 ## Generating Docs Markdown
 
-Run `./slack-emojinator docs` and the binary should generate an index file and pages of 100 emojis.
+Run `./emoji-archiver docs` and the binary should generate an index file and pages of 100 emojis.
 The emojis will be generated based off of `./emojis/<subdomain>` by default and be populated in `./docs/<subdomain>` by default.
 
 ## Posting "Emoji Release Notes" for a Slack team
 
-Running `./slack-emojinator release-notes` will post a ranking of emoji uploaders, and a sorted list of new emojis to the configured .slack.channel option in the .config.yaml
+Running `./emoji-archiver release-notes` will post a ranking of emoji uploaders, and a sorted list of new emojis to the configured .slack.channel option in the .config.yaml
 
 💜

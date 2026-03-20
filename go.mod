@@ -1,4 +1,4 @@
-module github.com/erindatkinson/slack-emojinator
+module github.com/erindatkinson/emoji-archiver
 
 go 1.26.1
 
