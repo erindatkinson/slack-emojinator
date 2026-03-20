@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/erindatkinson/slack-emojinator/internal/slack"
+	"github.com/erindatkinson/emoji-archiver/internal/slack"
 	"github.com/go-faker/faker/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

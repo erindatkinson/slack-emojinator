@@ -6,7 +6,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/erindatkinson/slack-emojinator/internal/utilities"
+	"github.com/erindatkinson/emoji-archiver/internal/utilities"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -15,7 +15,7 @@ var browser, profile, subdomain, channel, directory, logLevel string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "slack-emojinator",
+	Use:   "emoji-archiver",
 	Short: "A tool to bulk import and export slack emojis",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		logger := utilities.NewLogger(logLevel,
@@ -50,7 +50,7 @@ func init() {
 func initConfig() {
 	viper.SetConfigName(".config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("/etc/slack-emojinator/")
+	viper.AddConfigPath("/etc/emoji-archiver/")
 	viper.AddConfigPath("$HOME/.emojinator")
 	viper.AddConfigPath(".")
 	viper.ReadInConfig()

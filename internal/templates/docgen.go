@@ -5,7 +5,7 @@ import (
 	"path"
 	"text/template"
 
-	"github.com/erindatkinson/slack-emojinator/internal/cache"
+	"github.com/erindatkinson/emoji-archiver/internal/cache"
 )
 
 func WriteIndex(emojiDir, docsDir string, pages []*cache.EmojiPage) error {

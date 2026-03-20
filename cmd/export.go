@@ -8,9 +8,9 @@ import (
 	"path"
 	"slices"
 
-	"github.com/erindatkinson/slack-emojinator/internal/cache"
-	"github.com/erindatkinson/slack-emojinator/internal/slack"
-	"github.com/erindatkinson/slack-emojinator/internal/utilities"
+	"github.com/erindatkinson/emoji-archiver/internal/cache"
+	"github.com/erindatkinson/emoji-archiver/internal/slack"
+	"github.com/erindatkinson/emoji-archiver/internal/utilities"
 	"github.com/gammazero/workerpool"
 	"github.com/spf13/cobra"
 )

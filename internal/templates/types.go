@@ -1,6 +1,6 @@
 package templates
 
-import "github.com/erindatkinson/slack-emojinator/internal/cache"
+import "github.com/erindatkinson/emoji-archiver/internal/cache"
 
 type Docs struct {
 	Namespace string

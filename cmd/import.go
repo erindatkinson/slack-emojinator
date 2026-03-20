@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/erindatkinson/slack-emojinator/internal/slack"
-	"github.com/erindatkinson/slack-emojinator/internal/utilities"
+	"github.com/erindatkinson/emoji-archiver/internal/slack"
+	"github.com/erindatkinson/emoji-archiver/internal/utilities"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )

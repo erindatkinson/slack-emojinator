@@ -5,7 +5,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/erindatkinson/slack-emojinator/internal/slack"
+	"github.com/erindatkinson/emoji-archiver/internal/slack"
 )
 
 // RenderRanks iterates through
